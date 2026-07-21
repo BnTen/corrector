@@ -1,27 +1,110 @@
+@import "../shared/styles/tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: var(--ds-canvas);
+  --foreground: var(--ds-ink);
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--ds-canvas);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+
+  .safe-pt {
+    padding-top: var(--safe-top);
+  }
+
+  .safe-pb {
+    padding-bottom: var(--safe-bottom);
+  }
+
+  .safe-pl {
+    padding-left: var(--safe-left);
+  }
+
+  .safe-pr {
+    padding-right: var(--safe-right);
+  }
+
+  .safe-px {
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
+  }
+
+  .safe-py {
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+  }
+
+  .safe-inset {
+    padding-top: var(--safe-top);
+    padding-right: var(--safe-right);
+    padding-bottom: var(--safe-bottom);
+    padding-left: var(--safe-left);
+  }
+}
+
+/* TipTap editor */
+.ProseMirror {
+  outline: none;
+  min-height: 240px;
+  line-height: 1.7;
+}
+
+.ProseMirror p {
+  margin: 0.5em 0;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: var(--ds-muted);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Lint underlines by error category */
+.lint-spelling {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--ds-coral);
+  text-underline-offset: 3px;
+}
+
+.lint-grammar {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--ds-pink);
+  text-underline-offset: 3px;
+}
+
+.lint-conjugation {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--ds-lavender);
+  text-underline-offset: 3px;
+}
+
+.lint-punctuation {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--ds-yellow);
+  text-underline-offset: 3px;
+}
+
+.lint-style {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--ds-sky);
+  text-underline-offset: 3px;
 }

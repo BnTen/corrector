@@ -1,0 +1,34 @@
+:root {
+  /* Canvas & surfaces */
+  --ds-canvas: #f3f4f6;
+  --ds-elevated: #ffffff;
+  --ds-inverse: #14151a;
+  --ds-ink: #14151a;
+  --ds-muted: #6b7280;
+  --ds-border: #e5e7eb;
+
+  /* Accents */
+  --ds-lime: #d4ef3a;
+  --ds-sky: #bdebff;
+  --ds-coral: #ff4d3d;
+  --ds-pink: #f8bbd0;
+  --ds-yellow: #fff59d;
+  --ds-lavender: #e1bee7;
+
+  /* Radius */
+  --ds-radius-sm: 8px;
+  --ds-radius-md: 12px;
+  --ds-radius-lg: 14px;
+  --ds-radius-pill: 9999px;
+
+  /* Shadows */
+  --ds-shadow-sm: 0 1px 2px rgba(20, 21, 26, 0.04);
+  --ds-shadow-md: 0 4px 16px rgba(20, 21, 26, 0.06);
+  --ds-shadow-lg: 0 12px 32px rgba(20, 21, 26, 0.1);
+
+  /* Safe areas */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}

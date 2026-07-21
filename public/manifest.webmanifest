@@ -1,0 +1,17 @@
+{
+  "name": "Text Corrector",
+  "short_name": "Corrector",
+  "description": "Correcteur de texte intelligent — orthographe, grammaire et style.",
+  "start_url": "/workspace",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#14151a",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
