@@ -90,7 +90,7 @@ export function WorkspaceShell({
 }: WorkspaceShellProps) {
   return (
     <div className={cn("flex min-h-dvh flex-col bg-ds-canvas", className)}>
-      <TopBar navItems={workspaceNav} />
+      <TopBar navItems={workspaceNav} showEditorCta={false} />
 
       <div className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col px-3 pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-3 sm:px-4 lg:px-6 lg:pb-6">
         <div className="relative hidden min-h-0 flex-1 gap-4 lg:flex">

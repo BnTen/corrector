@@ -24,6 +24,7 @@ import {
   type AppliedCorrection,
 } from "@/features/editor/lib/apply-matches";
 import { CorrectionThread } from "@/features/editor/components/correction-thread";
+import { CleanTextPanel } from "@/features/editor/components/clean-text-panel";
 import { EditorToolDock } from "@/features/editor/components/editor-tool-dock";
 import {
   titleFromContent,
@@ -226,9 +227,9 @@ export function EditorScene({
         />
       ) : null}
 
-      <div className="rounded-[14px] border border-ds-border/60 bg-ds-elevated p-3 shadow-ds-md sm:p-5">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-ds-muted">
-          <span>
+      <div className="overflow-hidden rounded-[16px] border border-ds-border/70 bg-ds-elevated shadow-ds-md">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ds-border/50 bg-gradient-to-r from-ds-canvas/80 to-white px-4 py-2.5 sm:px-5">
+          <span className="text-xs text-ds-muted">
             <strong className="text-ds-ink">
               {language === "fr" ? "FR" : "EN"}
             </strong>
@@ -240,7 +241,7 @@ export function EditorScene({
               <mark className="rounded bg-ds-lime/50 px-0.5">corrigé</mark>
             </span>
           </span>
-          <span>
+          <span className="text-xs font-medium tabular-nums text-ds-muted">
             {isChecking
               ? "Analyse…"
               : error
@@ -249,16 +250,20 @@ export function EditorScene({
           </span>
         </div>
 
-        <EditorContent editor={editor} />
-
-        {error ? (
-          <p className="mt-2 text-xs text-ds-coral" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <div className="px-3 py-3 sm:px-5 sm:py-4">
+          <EditorContent editor={editor} />
+          {error ? (
+            <p className="mt-2 text-xs text-ds-coral" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </div>
       </div>
 
-      <div className="rounded-[14px] border border-ds-border/60 bg-ds-elevated p-3 shadow-ds-sm lg:hidden">
+      {/* Clean corrected text + copy CTA */}
+      <CleanTextPanel text={plainText} correctionCount={appliedLog.length} />
+
+      <div className="rounded-[16px] border border-ds-border/60 bg-ds-elevated p-3 shadow-ds-sm lg:hidden">
         <CorrectionThread
           appliedLog={appliedLog}
           isChecking={isChecking}
@@ -267,7 +272,7 @@ export function EditorScene({
       </div>
 
       <div className="hidden lg:block">
-        <div className="rounded-[14px] border border-ds-border/60 bg-ds-elevated p-4 shadow-ds-md">
+        <div className="rounded-[16px] border border-ds-border/60 bg-ds-elevated p-4 shadow-ds-md">
           <CorrectionThread appliedLog={appliedLog} isChecking={isChecking} />
         </div>
       </div>

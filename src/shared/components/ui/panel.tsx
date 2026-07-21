@@ -20,7 +20,7 @@ export function Panel({
   return (
     <Comp
       className={cn(
-        "flex h-full min-h-0 flex-col rounded-[14px] border border-ds-border/60 bg-ds-elevated shadow-ds-md",
+        "flex h-full min-h-0 flex-col rounded-[16px] border border-ds-border/60 bg-ds-elevated shadow-ds-md",
         className
       )}
       {...props}
