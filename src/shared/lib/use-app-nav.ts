@@ -4,7 +4,7 @@ import type { TopBarNavItem } from "@/shared/components/ui/top-bar";
 import { useI18n } from "@/shared/i18n/provider";
 
 export function useAppNav(
-  active: "workspace" | "dashboard" | "admin",
+  active: "workspace" | "dashboard" | "quiz" | "admin",
   options?: { showAdmin?: boolean }
 ): TopBarNavItem[] {
   const { t } = useI18n();
@@ -14,6 +14,11 @@ export function useAppNav(
       href: "/workspace",
       label: t("nav.write"),
       active: active === "workspace",
+    },
+    {
+      href: "/quiz",
+      label: t("nav.quiz"),
+      active: active === "quiz",
     },
     {
       href: "/dashboard",

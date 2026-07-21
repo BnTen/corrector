@@ -7,7 +7,7 @@ import {
 } from "@/shared/i18n/detect";
 import { UI_LOCALE_COOKIE, isUiLocale } from "@/shared/i18n/config";
 
-const AUTH_GATED = ["/workspace", "/dashboard", "/admin"];
+const AUTH_GATED = ["/workspace", "/dashboard", "/quiz", "/admin"];
 
 export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

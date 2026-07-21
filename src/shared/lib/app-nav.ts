@@ -3,7 +3,7 @@ import { translate } from "@/shared/i18n/translate";
 import type { UiLocale } from "@/shared/i18n/config";
 
 export function appNav(
-  active: "workspace" | "dashboard" | "admin",
+  active: "workspace" | "dashboard" | "quiz" | "admin",
   options?: { showAdmin?: boolean; locale?: UiLocale }
 ): TopBarNavItem[] {
   const locale = options?.locale ?? "en";
@@ -14,6 +14,11 @@ export function appNav(
       href: "/workspace",
       label: t("nav.write"),
       active: active === "workspace",
+    },
+    {
+      href: "/quiz",
+      label: t("nav.quiz"),
+      active: active === "quiz",
     },
     {
       href: "/dashboard",

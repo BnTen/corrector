@@ -141,6 +141,7 @@ export const en = {
     yourAnswer: "Your answer",
     correct: "Correct",
     incorrect: "Incorrect",
+    pageSubtitle: "Practice from your real mistakes",
   },
   funnel: {
     unlockTitle: "Unlock {n} corrections",
@@ -296,6 +297,7 @@ export const fr = {
     yourAnswer: "Votre réponse",
     correct: "Correct",
     incorrect: "Incorrect",
+    pageSubtitle: "Entraîne-toi à partir de tes vraies fautes",
   },
   funnel: {
     unlockTitle: "Débloquez {n} corrections",

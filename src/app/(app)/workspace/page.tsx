@@ -1,13 +1,9 @@
 "use client";
 
 import * as React from "react";
-import {
-  WorkspaceShell,
-  type WorkspaceInsight,
-} from "@/shared/components/layout/workspace-shell";
+import { WorkspaceShell } from "@/shared/components/layout/workspace-shell";
 import { EditorScene } from "@/features/editor/components/editor-scene";
 import { AnalyticsPanel } from "@/features/analytics/components/analytics-panel";
-import { QuizPanel } from "@/features/quiz/components/quiz-panel";
 import { ClasseurPanel } from "@/features/archives/components/classeur-panel";
 import type { AppliedCorrection } from "@/features/editor/lib/apply-matches";
 import type { ArchiveEntry } from "@/features/archives/lib/classeur-storage";
@@ -23,7 +19,6 @@ export default function WorkspacePage() {
   const [activeArchiveId, setActiveArchiveId] = React.useState<string | null>(
     null
   );
-  const [insight, setInsight] = React.useState<WorkspaceInsight>(null);
   const [binderOpen, setBinderOpen] = React.useState(false);
   const [loadContent, setLoadContent] = React.useState<{
     html?: string;
@@ -60,7 +55,6 @@ export default function WorkspacePage() {
     });
     setAppliedLog(entry.corrections ?? []);
     setBinderOpen(false);
-    setInsight(null);
   }, []);
 
   const handleCreated = React.useCallback((entry: ArchiveEntry) => {
@@ -74,16 +68,29 @@ export default function WorkspacePage() {
     });
     setAppliedLog([]);
     setBinderOpen(false);
-    setInsight(null);
   }, []);
 
   return (
     <WorkspaceShell
-      insight={insight}
-      onInsightChange={setInsight}
       binderOpen={binderOpen}
       onBinderOpenChange={setBinderOpen}
-      analytics={
+      classeur={
+        <ClasseurPanel
+          refreshKey={archiveTick}
+          activeId={activeArchiveId}
+          onOpen={handleOpenArchive}
+          onCreated={handleCreated}
+          rail
+        />
+      }
+    >
+      <div className="flex min-h-0 flex-col gap-3">
+        <EditorScene
+          onAppliedLogChange={setAppliedLog}
+          onArchiveSaved={() => setArchiveTick((n) => n + 1)}
+          loadContent={loadContent}
+        />
+
         <AnalyticsPanel
           matchCategories={matchCategories}
           topMistakes={topMistakes}
@@ -96,23 +103,7 @@ export default function WorkspacePage() {
               : Math.max(0, Math.round(100 - Math.min(45, totalErrors * 0.8)))
           }
         />
-      }
-      classeur={
-        <ClasseurPanel
-          refreshKey={archiveTick}
-          activeId={activeArchiveId}
-          onOpen={handleOpenArchive}
-          onCreated={handleCreated}
-          rail
-        />
-      }
-      quiz={<QuizPanel />}
-    >
-      <EditorScene
-        onAppliedLogChange={setAppliedLog}
-        onArchiveSaved={() => setArchiveTick((n) => n + 1)}
-        loadContent={loadContent}
-      />
+      </div>
     </WorkspaceShell>
   );
 }

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { TopBar } from "@/shared/components/ui/top-bar";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { AnalyticsPanel } from "@/features/analytics/components/analytics-panel";
-import { QuizPanel } from "@/features/quiz/components/quiz-panel";
 import { ClasseurPanel } from "@/features/archives/components/classeur-panel";
 import { MetricTile } from "@/shared/components/ui/metric-tile";
 import { Button } from "@/shared/components/ui/button";
@@ -98,7 +97,9 @@ export function DashboardClient({ showAdmin = false }: { showAdmin?: boolean }) 
                 window.location.href = "/workspace";
               }}
             />
-            <QuizPanel />
+            <Button asChild variant="secondary" className="rounded-full">
+              <Link href="/quiz">{t("nav.quiz")}</Link>
+            </Button>
           </div>
         </div>
       </div>
