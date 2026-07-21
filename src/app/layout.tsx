@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Syne } from "next/font/google";
 import localFont from "next/font/local";
 import { cookies } from "next/headers";
 import "./globals.css";
@@ -20,11 +21,16 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
   weight: "100 900",
 });
+const display = Syne({
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["500", "600", "700"],
+});
 
 export const metadata: Metadata = {
-  title: "Text Corrector",
+  title: "Text Corrector — Mistakes don't stand a chance",
   description:
-    "Smart text corrector — spelling, grammar and style in real time. 2 free corrections, no account required.",
+    "Live spelling, grammar & style. Two free corrections — no account, no wait.",
   manifest: "/manifest.webmanifest",
   applicationName: "Text Corrector",
 };
@@ -51,7 +57,7 @@ export default function RootLayout({
   return (
     <html lang={locale}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${display.variable} antialiased`}
       >
         <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
       </body>

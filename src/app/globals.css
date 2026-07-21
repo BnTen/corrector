@@ -151,3 +151,160 @@ body {
   background: color-mix(in srgb, var(--ds-sky) 40%, white);
 }
 
+/* ── Landing: single-frame hero ── */
+.landing-shell {
+  background: var(--ds-canvas);
+}
+
+.landing-atmosphere {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(90% 70% at 0% 0%, color-mix(in srgb, var(--ds-lime) 55%, transparent), transparent 58%),
+    radial-gradient(70% 55% at 100% 15%, color-mix(in srgb, var(--ds-sky) 70%, transparent), transparent 55%),
+    radial-gradient(55% 45% at 70% 100%, color-mix(in srgb, var(--ds-lime) 28%, transparent), transparent 60%),
+    linear-gradient(165deg, #f4f5f7 0%, #e8ebf0 48%, #e3e7ee 100%);
+}
+
+.landing-grain {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.landing-cta-primary {
+  background: var(--ds-lime) !important;
+  color: var(--ds-ink) !important;
+  box-shadow: 0 1px 0 rgba(20, 21, 26, 0.06);
+  transition: transform 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.landing-cta-primary:hover {
+  background: #c8e22e !important;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(20, 21, 26, 0.12);
+}
+
+.landing-cta-sm {
+  transition: transform 0.2s ease;
+}
+
+.landing-cta-sm:hover {
+  transform: translateY(-1px);
+}
+
+.landing-enter {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: landingEnter 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.landing-enter-1 { animation-delay: 0.05s; }
+.landing-enter-2 { animation-delay: 0.12s; }
+.landing-enter-3 { animation-delay: 0.2s; }
+.landing-enter-4 { animation-delay: 0.28s; }
+.landing-enter-5 { animation-delay: 0.36s; }
+.landing-enter-6 { animation-delay: 0.44s; }
+.landing-enter-7 { animation-delay: 0.22s; }
+
+@keyframes landingEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-stage-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: -12% -8% auto;
+  height: 55%;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--ds-lime) 32%, transparent), transparent 72%);
+  opacity: 0.9;
+}
+
+.landing-pulse-dot {
+  animation: landingPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes landingPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}
+
+.landing-beat {
+  display: inline-grid;
+  vertical-align: baseline;
+}
+
+.landing-strike,
+.landing-fix {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.landing-strike {
+  color: color-mix(in srgb, var(--ds-coral) 80%, var(--ds-ink));
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  opacity: 1;
+  animation: landingWrong 5.2s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.38s);
+}
+
+.landing-fix {
+  border-radius: 3px;
+  padding: 0 2px;
+  background: color-mix(in srgb, var(--ds-lime) 58%, white);
+  color: var(--ds-ink);
+  opacity: 0;
+  animation: landingRight 5.2s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.38s);
+}
+
+@keyframes landingWrong {
+  0%, 12% { opacity: 1; }
+  22%, 78% { opacity: 0; }
+  88%, 100% { opacity: 1; }
+}
+
+@keyframes landingRight {
+  0%, 12% { opacity: 0; }
+  22%, 78% { opacity: 1; }
+  88%, 100% { opacity: 0; }
+}
+
+@media (max-height: 780px) {
+  .landing-copy .landing-enter-4,
+  .landing-copy .landing-enter-6 {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) and (max-height: 740px) {
+  .landing-stage {
+    transform: scale(0.92);
+    transform-origin: top center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-enter,
+  .landing-pulse-dot,
+  .landing-strike,
+  .landing-fix,
+  .landing-cta-primary {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .landing-strike { opacity: 0 !important; }
+  .landing-fix { opacity: 1 !important; }
+}
+

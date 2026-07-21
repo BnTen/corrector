@@ -7,7 +7,7 @@ export type MessageTree = {
 export const en = {
   brand: {
     name: "Text Corrector",
-    tagline: "Live writing",
+    tagline: "Correct as you write",
   },
   nav: {
     try: "Try",
@@ -21,7 +21,7 @@ export const en = {
     quiz: "Quiz",
   },
   common: {
-    tryNow: "Try now",
+    tryNow: "Correct my text — free",
     tryCta: "Try free",
     signIn: "Sign in",
     signOut: "Sign out",
@@ -38,10 +38,11 @@ export const en = {
     unlimited: "Unlimited",
   },
   landing: {
-    pill: "Spelling · Grammar · Style",
+    headline: "Mistakes don't stand a chance.",
     subtitle:
-      "Write. We correct. Clean text in seconds — 2 free corrections, no account required.",
-    micro: "Instant playground · email only on the 3rd credit",
+      "Live spelling, grammar & style. Two free corrections — no account, no wait.",
+    micro: "Opens in seconds · email only after your 2 free tries",
+    demoLabel: "Live correction",
   },
   try: {
     title: "Playground",
@@ -163,7 +164,7 @@ export const en = {
 export const fr = {
   brand: {
     name: "Text Corrector",
-    tagline: "Écriture live",
+    tagline: "Corrigez en écrivant",
   },
   nav: {
     try: "Essai",
@@ -177,7 +178,7 @@ export const fr = {
     quiz: "Quiz",
   },
   common: {
-    tryNow: "Essayer maintenant",
+    tryNow: "Corriger mon texte — gratuit",
     tryCta: "Essayer",
     signIn: "Se connecter",
     signOut: "Déconnexion",
@@ -194,10 +195,11 @@ export const fr = {
     unlimited: "Illimité",
   },
   landing: {
-    pill: "Orthographe · Grammaire · Style",
+    headline: "Vos fautes n'ont aucune chance.",
     subtitle:
-      "Écrivez. On corrige. Texte propre en quelques secondes — 2 corrections gratuites, pas de compte pour commencer.",
-    micro: "Playground instantané · email seulement au 3ᵉ crédit",
+      "Orthographe, grammaire et style en live. Deux corrections gratuites — sans compte, sans attendre.",
+    micro: "Ouvert en secondes · email seulement après vos 2 essais",
+    demoLabel: "Correction live",
   },
   try: {
     title: "Playground",
