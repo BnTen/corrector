@@ -36,7 +36,7 @@ export async function signIn(
     };
   }
 
-  redirect("/workspace");
+  redirect("/dashboard");
 }
 
 export async function signUp(
@@ -81,24 +81,17 @@ export async function signUp(
     };
   }
 
-  redirect("/workspace");
+  redirect("/dashboard");
 }
 
-export async function signOut(): Promise<AuthActionResult> {
-  if (!isSupabaseConfigured()) {
-    return { error: "Authentification non configurée (Supabase manquant)." };
-  }
-
-  try {
-    const supabase = createClient();
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      return { error: error.message };
+export async function signOut(): Promise<void> {
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch {
+      // Still redirect to login even if sign-out fails.
     }
-  } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : "Déconnexion impossible.",
-    };
   }
 
   redirect("/login");

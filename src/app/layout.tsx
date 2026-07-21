@@ -16,7 +16,7 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Text Corrector",
   description:
-    "Correcteur de texte intelligent — orthographe, grammaire et style en temps réel.",
+    "Correcteur de texte intelligent — orthographe, grammaire et style en temps réel. 2 corrections gratuites, sans compte.",
   manifest: "/manifest.webmanifest",
   applicationName: "Text Corrector",
 };

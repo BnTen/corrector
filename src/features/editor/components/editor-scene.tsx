@@ -57,6 +57,13 @@ export interface EditorSceneProps {
   hideToolDock?: boolean;
   onAppliedLogChange?: (log: AppliedCorrection[]) => void;
   onArchiveSaved?: () => void;
+  /**
+   * When set, auto-apply is limited to `creditsRemaining` corrections.
+   * Calls `onCreditsExhausted` when a batch would need credits but none remain.
+   */
+  creditsRemaining?: number;
+  onCreditsConsumed?: (count: number) => void;
+  onCreditsExhausted?: () => void;
   /** External load request from classeur */
   loadContent?: {
     html?: string;
@@ -71,6 +78,9 @@ export function EditorScene({
   hideToolDock,
   onAppliedLogChange,
   onArchiveSaved,
+  creditsRemaining,
+  onCreditsConsumed,
+  onCreditsExhausted,
   loadContent,
 }: EditorSceneProps) {
   const [language, setLanguage] = React.useState<CheckLanguage>("fr");
@@ -164,13 +174,27 @@ export function EditorScene({
     setPlainText(getDocPlainText(editor.state.doc));
   }, [editor, loadContent]);
 
-  // Auto-apply with visual marks
+  // Auto-apply with visual marks (optionally credit-gated)
   React.useEffect(() => {
     if (!editor || !autoCorrect || isChecking || applyingRef.current) return;
     if (checkedText !== plainText) return;
     if (matches.length === 0) return;
 
-    const fingerprint = matches
+    const isGated = typeof creditsRemaining === "number";
+    if (isGated && creditsRemaining <= 0) {
+      onCreditsExhausted?.();
+      return;
+    }
+
+    const batch = isGated
+      ? matches.slice(0, Math.max(0, creditsRemaining))
+      : matches;
+    if (batch.length === 0) {
+      onCreditsExhausted?.();
+      return;
+    }
+
+    const fingerprint = batch
       .map((m) => `${m.offset}:${m.length}:${m.replacements[0]}`)
       .join("|");
     if (fingerprint === lastFingerprintRef.current) return;
@@ -178,13 +202,27 @@ export function EditorScene({
     applyingRef.current = true;
     lastFingerprintRef.current = fingerprint;
 
-    const applied = applyAllReplacements(editor, matches, plainText);
+    const applied = applyAllReplacements(editor, batch, plainText);
     if (applied.length > 0) {
       setAppliedLog((prev) => [...applied, ...prev].slice(0, 50));
+      if (isGated) onCreditsConsumed?.(applied.length);
+      if (isGated && applied.length < matches.length) {
+        onCreditsExhausted?.();
+      }
     }
 
     applyingRef.current = false;
-  }, [editor, autoCorrect, isChecking, checkedText, plainText, matches]);
+  }, [
+    editor,
+    autoCorrect,
+    isChecking,
+    checkedText,
+    plainText,
+    matches,
+    creditsRemaining,
+    onCreditsConsumed,
+    onCreditsExhausted,
+  ]);
 
   React.useEffect(() => {
     if (!editor) return;
@@ -242,6 +280,10 @@ export function EditorScene({
             </span>
           </span>
           <span className="text-xs font-medium tabular-nums text-ds-muted">
+            {typeof creditsRemaining === "number"
+              ? `${creditsRemaining} crédit${creditsRemaining === 1 ? "" : "s"}`
+              : null}
+            {typeof creditsRemaining === "number" ? " · " : null}
             {isChecking
               ? "Analyse…"
               : error

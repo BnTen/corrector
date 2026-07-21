@@ -17,7 +17,7 @@ export interface TopBarProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 const defaultNav: TopBarNavItem[] = [
-  { href: "/workspace", label: "Écrire" },
+  { href: "/try", label: "Essai" },
   { href: "/login", label: "Compte" },
 ];
 
@@ -84,10 +84,10 @@ export function TopBar({
           {children}
           {showEditorCta ? (
             <Link
-              href="/workspace"
+              href="/try"
               className="hidden rounded-full bg-ds-lime px-4 py-2 text-sm font-semibold text-ds-inverse shadow-[0_0_20px_rgba(212,239,58,0.25)] transition hover:brightness-105 sm:inline-flex"
             >
-              Ouvrir l’éditeur
+              Essayer
             </Link>
           ) : null}
         </div>

@@ -3,6 +3,8 @@
 import * as React from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import { TopBar } from "@/shared/components/ui/top-bar";
+import { SignOutButton } from "@/features/auth/components/sign-out-button";
+import { appNav } from "@/shared/lib/app-nav";
 import { cn } from "@/shared/lib/cn";
 
 export interface WorkspaceShellProps {
@@ -12,11 +14,6 @@ export interface WorkspaceShellProps {
   children?: React.ReactNode;
   className?: string;
 }
-
-const workspaceNav = [
-  { href: "/workspace", label: "Écrire", active: true },
-  { href: "/login", label: "Compte" },
-];
 
 function SideTabs({
   analytics,
@@ -90,7 +87,9 @@ export function WorkspaceShell({
 }: WorkspaceShellProps) {
   return (
     <div className={cn("flex min-h-dvh flex-col bg-ds-canvas", className)}>
-      <TopBar navItems={workspaceNav} showEditorCta={false} />
+      <TopBar navItems={appNav("workspace")} showEditorCta={false}>
+        <SignOutButton />
+      </TopBar>
 
       <div className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col px-3 pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-3 sm:px-4 lg:px-6 lg:pb-6">
         <div className="relative hidden min-h-0 flex-1 gap-4 lg:flex">

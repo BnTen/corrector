@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/server/supabase/middleware";
 
+const AUTH_GATED = ["/workspace", "/dashboard", "/admin"];
+
 export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -11,8 +13,12 @@ export async function middleware(request: NextRequest) {
   }
 
   const response = await updateSession(request);
+  const path = request.nextUrl.pathname;
+  const needsAuth = AUTH_GATED.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}/`)
+  );
 
-  if (request.nextUrl.pathname.startsWith("/workspace")) {
+  if (needsAuth) {
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         getAll() {
@@ -41,10 +47,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Run on all app routes except static assets.
-     * /workspace is auth-gated when Supabase env is configured.
-     */
     "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

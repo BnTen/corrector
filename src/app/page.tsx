@@ -29,7 +29,7 @@ export default function HomePage() {
               Connexion
             </Link>
             <Button asChild size="sm" className="rounded-full">
-              <Link href="/workspace">Essayer</Link>
+              <Link href="/try">Essayer</Link>
             </Button>
           </div>
         </div>
@@ -45,18 +45,22 @@ export default function HomePage() {
         </h1>
 
         <p className="mt-5 max-w-xl text-lg leading-relaxed text-ds-muted sm:text-xl">
-          Écrivez librement. Les fautes se corrigent en direct, avec un texte
-          propre prêt à copier.
+          Écrivez. On corrige. Texte propre en 10 secondes — 2 corrections
+          gratuites, pas de compte pour commencer.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-3">
           <Button asChild size="lg" className="rounded-full px-7">
-            <Link href="/workspace">Ouvrir l’éditeur</Link>
+            <Link href="/try">Essayer maintenant</Link>
           </Button>
           <Button asChild variant="secondary" size="lg" className="rounded-full">
             <Link href="/login">Se connecter</Link>
           </Button>
         </div>
+
+        <p className="mt-6 text-sm text-ds-muted">
+          Playground instantané · email seulement au 3ᵉ crédit
+        </p>
       </main>
     </div>
   );
