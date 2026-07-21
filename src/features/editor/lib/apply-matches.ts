@@ -1,6 +1,7 @@
 import type { Editor } from "@tiptap/react";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import type { LintMatch } from "@/features/editor/types";
+import { pickReplacement } from "@/shared/lib/pick-replacement";
 
 export interface AppliedCorrection {
   id: string;
@@ -31,35 +32,55 @@ function offsetToPos(doc: ProseMirrorNode, offset: number): number | null {
   return result;
 }
 
-/** Apply all matches end→start in one transaction (safe for a small sentence batch). */
+function prepareFixes(
+  matches: LintMatch[],
+  plainText: string
+): Array<{ match: LintMatch; replacement: string; original: string }> {
+  const fixes: Array<{
+    match: LintMatch;
+    replacement: string;
+    original: string;
+  }> = [];
+
+  for (const match of matches) {
+    const original = plainText.slice(match.offset, match.offset + match.length);
+    if (!original) continue;
+
+    const replacement = pickReplacement(
+      original,
+      match.replacements,
+      match.category,
+      match.ruleId
+    );
+    if (!replacement || replacement === original) continue;
+
+    fixes.push({ match, replacement, original });
+  }
+
+  return fixes;
+}
+
+/** Apply safe replacements end→start in one transaction. */
 export function applyAllReplacements(
   editor: Editor,
   matches: LintMatch[],
   plainText: string
 ): AppliedCorrection[] {
-  const withFix = matches.filter((m) => m.replacements[0]);
-  if (withFix.length === 0) return [];
+  const fixes = prepareFixes(matches, plainText);
+  if (fixes.length === 0) return [];
 
   const originalDoc = editor.state.doc;
-  const sorted = [...withFix].sort((a, b) => b.offset - a.offset);
+  const sorted = [...fixes].sort((a, b) => b.match.offset - a.match.offset);
   let tr = editor.state.tr;
   const applied: AppliedCorrection[] = [];
 
-  for (const match of sorted) {
-    const replacement = match.replacements[0];
-    if (!replacement) continue;
-
+  for (const { match, replacement, original } of sorted) {
     const from = offsetToPos(originalDoc, match.offset);
     const to = offsetToPos(originalDoc, match.offset + match.length);
     if (from === null || to === null || to < from) continue;
 
     const mappedFrom = tr.mapping.map(from);
     const mappedTo = tr.mapping.map(to);
-    const original =
-      plainText.slice(match.offset, match.offset + match.length) ||
-      originalDoc.textBetween(from, to, "");
-
-    if (!original || original === replacement) continue;
 
     tr = tr.insertText(replacement, mappedFrom, mappedTo);
     applied.push({

@@ -9,15 +9,18 @@ import {
   remapMatchOffset,
   type TextSegment,
 } from "@/features/editor/lib/text-segments";
+import {
+  findSmsHits,
+  smsHitsToMatches,
+} from "@/features/editor/lib/fr-sms-normalizer";
+import { pickReplacement } from "@/shared/lib/pick-replacement";
 
 export type CheckLanguage = "fr" | "en-US";
 
 export interface UseLiveCheckOptions {
   text: string;
-  /** Plain-text caret offset for progressive scoping */
   caretOffset: number;
   language: CheckLanguage;
-  /** Debounce for the active (current) sentence — default 200ms */
   debounceMs?: number;
   enabled?: boolean;
 }
@@ -55,17 +58,43 @@ async function fetchMatches(
   return data?.matches ?? [];
 }
 
+function filterAutoMatches(
+  matches: LintMatch[],
+  fullText: string,
+  wordStart: number,
+  segment: TextSegment
+): LintMatch[] {
+  return matches
+    .map((m) => {
+      const original = fullText.slice(m.offset, m.offset + m.length);
+      const picked = pickReplacement(
+        original,
+        m.replacements,
+        m.category,
+        m.ruleId
+      );
+      if (!picked) return null;
+      return { ...m, replacements: [picked, ...m.replacements.filter((r) => r !== picked)] };
+    })
+    .filter((m): m is LintMatch => {
+      if (!m) return false;
+      if (m.offset + m.length > wordStart) return false;
+      if (m.offset < segment.start || m.offset + m.length > segment.end)
+        return false;
+      return Boolean(m.replacements[0]);
+    });
+}
+
 /**
- * Progressive live check:
- * - Checks the active sentence quickly while typing
- * - Also quietly re-checks the last completed sentence for catch-up
- * - Never blocks on the full document
+ * Hybrid progressive check:
+ * 1) Instant SMS dictionary (local)
+ * 2) LanguageTool on sentence / short paragraph with smart replacement picking
  */
 export function useLiveCheck({
   text,
   caretOffset,
   language,
-  debounceMs = 200,
+  debounceMs = 220,
   enabled = true,
 }: UseLiveCheckOptions): UseLiveCheckResult {
   const [matches, setMatches] = React.useState<LintMatch[]>([]);
@@ -84,13 +113,30 @@ export function useLiveCheck({
     setTick((n) => n + 1);
   }, []);
 
+  // Instant SMS pass (no network)
+  React.useEffect(() => {
+    if (!enabled || language !== "fr") return;
+    if (!text.trim()) {
+      setMatches([]);
+      setCheckedText("");
+      return;
+    }
+
+    const wordStart = getTypingWordStart(text, caretOffset);
+    const smsMatches = smsHitsToMatches(findSmsHits(text, { wordStart }));
+
+    if (smsMatches.length > 0) {
+      setMatches(smsMatches);
+      setCheckedText(text);
+    }
+  }, [text, caretOffset, language, enabled]);
+
+  // LanguageTool progressive pass
   React.useEffect(() => {
     if (!enabled) return;
 
     if (!text.trim()) {
       abortRef.current?.abort();
-      setMatches([]);
-      setCheckedText("");
       setIsChecking(false);
       setError(null);
       setLastSegment(null);
@@ -99,7 +145,8 @@ export function useLiveCheck({
 
     const activePreview = getSentenceAt(text, caretOffset);
     const justFinished = /[.!?…]\s*$/.test(activePreview.text.trimEnd());
-    const wait = justFinished ? 90 : debounceMs;
+    // LT is slower: wait for pause or sentence end (SMS already handled above)
+    const wait = justFinished ? 120 : Math.max(debounceMs, 380);
 
     const timer = window.setTimeout(async () => {
       abortRef.current?.abort();
@@ -110,22 +157,27 @@ export function useLiveCheck({
       const completed = getCompletedSentencesBefore(text, caretOffset);
       const lastCompleted = completed[completed.length - 1] ?? null;
 
-      // Prefer catch-up on a completed sentence not yet checked this session
+      // Prefer a bit of context: previous sentence + active (better LT accuracy)
       let target = active;
+      if (lastCompleted && lastCompleted.end === active.start) {
+        target = {
+          start: lastCompleted.start,
+          end: active.end,
+          text: text.slice(lastCompleted.start, active.end),
+        };
+      }
+
       if (lastCompleted) {
-        const key = `${lastCompleted.start}:${lastCompleted.end}:${lastCompleted.text}`;
-        if (
-          !checkedCompletedRef.current.has(key) &&
-          lastCompleted.text.trim().length >= 3
-        ) {
+        const key = `${lastCompleted.start}:${lastCompleted.text}`;
+        if (!checkedCompletedRef.current.has(key) && lastCompleted.text.trim().length >= 3) {
+          // Prioritize unchecked completed sentence alone first (faster + progressive)
           target = lastCompleted;
           checkedCompletedRef.current.add(key);
         }
       }
 
-      // Cap segment size for speed (LanguageTool latency scales with length)
-      if (target.text.length > 600) {
-        const sliceStart = Math.max(0, target.text.length - 600);
+      if (target.text.length > 500) {
+        const sliceStart = Math.max(0, target.text.length - 500);
         target = {
           start: target.start + sliceStart,
           end: target.end,
@@ -140,32 +192,37 @@ export function useLiveCheck({
       setLastSegment(target);
 
       try {
-        const raw = await fetchMatches(
-          target.text,
-          language,
-          controller.signal
-        );
+        const raw = await fetchMatches(target.text, language, controller.signal);
         if (controller.signal.aborted) return;
 
         const wordStart = getTypingWordStart(text, caretOffset);
-        const remapped = raw
-          .map((m) => remapMatchOffset(m, target.start))
-          .filter((m) => {
-            // Don't touch the word currently being typed
-            if (m.offset + m.length > wordStart) return false;
-            // Stay inside segment
-            if (m.offset < target.start) return false;
-            if (m.offset + m.length > target.end) return false;
-            return Boolean(m.replacements[0]);
-          });
+        const remapped = raw.map((m) => remapMatchOffset(m, target.start));
+        const ltMatches = filterAutoMatches(remapped, text, wordStart, target);
 
-        setMatches(remapped);
+        // Merge: SMS hits (recompute) + LT, prefer SMS on overlapping offsets
+        const sms =
+          language === "fr"
+            ? smsHitsToMatches(findSmsHits(text, { wordStart }))
+            : [];
+
+        const occupied = new Set(
+          sms.flatMap((m) =>
+            Array.from({ length: m.length }, (_, i) => m.offset + i)
+          )
+        );
+
+        const ltOnly = ltMatches.filter((m) => {
+          for (let i = 0; i < m.length; i++) {
+            if (occupied.has(m.offset + i)) return false;
+          }
+          return true;
+        });
+
+        setMatches([...sms, ...ltOnly]);
         setCheckedText(text);
       } catch (err) {
         if (controller.signal.aborted) return;
         setError(err instanceof Error ? err.message : "Unable to check text");
-        setMatches([]);
-        setCheckedText("");
       } finally {
         if (!controller.signal.aborted) setIsChecking(false);
       }
@@ -177,7 +234,6 @@ export function useLiveCheck({
     };
   }, [text, caretOffset, language, debounceMs, enabled, tick]);
 
-  // Reset completed cache when language changes
   React.useEffect(() => {
     checkedCompletedRef.current = new Set();
   }, [language]);
