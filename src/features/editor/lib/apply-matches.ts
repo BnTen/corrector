@@ -31,7 +31,7 @@ function offsetToPos(doc: ProseMirrorNode, offset: number): number | null {
   return result;
 }
 
-/** Apply first replacement for each match (end → start) in one transaction. */
+/** Apply all matches end→start in one transaction (safe for a small sentence batch). */
 export function applyAllReplacements(
   editor: Editor,
   matches: LintMatch[],
@@ -59,11 +59,11 @@ export function applyAllReplacements(
       plainText.slice(match.offset, match.offset + match.length) ||
       originalDoc.textBetween(from, to, "");
 
-    if (original === replacement) continue;
+    if (!original || original === replacement) continue;
 
     tr = tr.insertText(replacement, mappedFrom, mappedTo);
     applied.push({
-      id: `${match.id}-${Date.now()}`,
+      id: `${match.id}-${Date.now()}-${match.offset}`,
       original,
       replacement,
       message: match.message,
@@ -73,8 +73,6 @@ export function applyAllReplacements(
   }
 
   if (applied.length === 0) return [];
-
-  // Keep cursor near the edit end when possible
-  editor.view.dispatch(tr.scrollIntoView());
+  editor.view.dispatch(tr);
   return applied.reverse();
 }

@@ -44,7 +44,7 @@ export function ToolDock({ className, items, ...props }: ToolDockProps) {
           )}
         >
           <span className="[&>svg]:h-5 [&>svg]:w-5">{item.icon}</span>
-          <span className="mt-0.5 text-[10px] font-medium lg:hidden">
+          <span className="mt-0.5 max-w-[3.5rem] truncate text-[9px] font-medium lg:hidden">
             {item.label}
           </span>
         </button>

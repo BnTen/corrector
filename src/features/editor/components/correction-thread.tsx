@@ -1,10 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/shared/components/ui/button";
 import { Pill } from "@/shared/components/ui/pill";
 import { cn } from "@/shared/lib/cn";
-import type { LintMatch } from "@/features/editor/types";
 import type { AppliedCorrection } from "@/features/editor/lib/apply-matches";
 import {
   CATEGORY_LABELS,
@@ -12,151 +10,61 @@ import {
 } from "@/features/editor/lib/category-meta";
 
 export interface CorrectionThreadProps {
-  matches: LintMatch[];
   appliedLog: AppliedCorrection[];
-  autoCorrect: boolean;
-  activeId?: string | null;
-  ignoredIds?: Set<string>;
-  onSelect?: (match: LintMatch) => void;
-  onApply: (match: LintMatch, replacement: string) => void;
-  onIgnore: (match: LintMatch) => void;
   isChecking?: boolean;
   className?: string;
+  compact?: boolean;
 }
 
 export function CorrectionThread({
-  matches,
   appliedLog,
-  autoCorrect,
-  activeId,
-  ignoredIds,
-  onSelect,
-  onApply,
-  onIgnore,
   isChecking,
   className,
+  compact,
 }: CorrectionThreadProps) {
-  const pending = matches.filter((m) => !ignoredIds?.has(m.id));
-
   return (
-    <div className={cn("flex h-full min-h-0 flex-col", className)}>
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-ds-ink">
-          {autoCorrect ? "Corrections auto" : "Corrections"}
-        </h3>
+    <div className={cn("flex min-h-0 flex-col", className)}>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-ds-ink">Live</h3>
         <span className="text-xs text-ds-muted">
           {isChecking
             ? "Analyse…"
-            : autoCorrect
-              ? `${appliedLog.length} appliquée${appliedLog.length === 1 ? "" : "s"}`
-              : `${pending.length} suggestion${pending.length === 1 ? "" : "s"}`}
+            : `${appliedLog.length} correction${appliedLog.length === 1 ? "" : "s"}`}
         </span>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto pr-1">
-        {autoCorrect ? (
-          appliedLog.length === 0 ? (
-            <div className="rounded-[14px] border border-dashed border-ds-border bg-ds-canvas/60 px-4 py-8 text-center text-sm text-ds-muted">
-              {isChecking
-                ? "Correction en cours…"
-                : "Écrivez — les fautes sont corrigées automatiquement."}
-            </div>
-          ) : (
-            appliedLog.map((item) => (
-              <article
-                key={item.id}
-                className="rounded-[14px] border border-ds-border/60 bg-ds-canvas/40 px-3.5 py-3"
-              >
-                <div className="flex items-center gap-2">
-                  <Pill tone={CATEGORY_TONES[item.category]}>
-                    {CATEGORY_LABELS[item.category]}
-                  </Pill>
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-ds-muted">
-                    Auto
-                  </span>
-                </div>
-                <p className="mt-2 text-sm text-ds-ink">
-                  <span className="line-through text-ds-muted">
+      <div
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto",
+          compact && "max-h-36"
+        )}
+      >
+        {appliedLog.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-ds-border bg-ds-canvas/50 px-3 py-4 text-center text-xs text-ds-muted">
+            {isChecking
+              ? "Correction en cours…"
+              : "Les fautes se corrigent phrase par phrase pendant que vous écrivez."}
+          </p>
+        ) : (
+          appliedLog.slice(0, compact ? 8 : 30).map((item) => (
+            <div
+              key={item.id}
+              className="flex items-start gap-2 rounded-xl border border-ds-border/50 bg-ds-canvas/40 px-2.5 py-2"
+            >
+              <Pill tone={CATEGORY_TONES[item.category]} className="shrink-0">
+                {CATEGORY_LABELS[item.category]}
+              </Pill>
+              <div className="min-w-0 flex-1 text-xs leading-snug">
+                <p className="truncate text-ds-ink">
+                  <span className="text-ds-muted line-through">
                     {item.original}
                   </span>
-                  <span className="mx-1.5 text-ds-muted">→</span>
-                  <span className="font-semibold text-ds-ink">
-                    {item.replacement}
-                  </span>
+                  <span className="mx-1 text-ds-muted">→</span>
+                  <span className="font-semibold">{item.replacement}</span>
                 </p>
-                <p className="mt-1 text-xs text-ds-muted">{item.message}</p>
-              </article>
-            ))
-          )
-        ) : pending.length === 0 ? (
-          <div className="rounded-[14px] border border-dashed border-ds-border bg-ds-canvas/60 px-4 py-8 text-center text-sm text-ds-muted">
-            {isChecking
-              ? "Vérification en cours…"
-              : "Aucune erreur détectée. Continuez à écrire."}
-          </div>
-        ) : (
-          pending.map((match) => {
-            const primary = match.replacements[0];
-            const isActive = match.id === activeId;
-
-            return (
-              <article
-                key={match.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => onSelect?.(match)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onSelect?.(match);
-                  }
-                }}
-                className={cn(
-                  "rounded-[14px] border bg-ds-elevated px-3.5 py-3 shadow-ds-sm transition-shadow",
-                  isActive
-                    ? "border-ds-inverse/40 shadow-ds-md ring-1 ring-ds-lime/50"
-                    : "border-ds-border/60 hover:shadow-ds-md"
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  <Pill tone={CATEGORY_TONES[match.category]}>
-                    {CATEGORY_LABELS[match.category]}
-                  </Pill>
-                </div>
-                <p className="mt-2 text-sm leading-snug text-ds-ink">
-                  {match.message}
-                </p>
-                {primary ? (
-                  <p className="mt-1.5 text-xs text-ds-muted">
-                    Suggestion :{" "}
-                    <span className="font-medium text-ds-ink">{primary}</span>
-                  </p>
-                ) : null}
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    disabled={!primary}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (primary) onApply(match, primary);
-                    }}
-                  >
-                    Appliquer
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onIgnore(match);
-                    }}
-                  >
-                    Ignorer
-                  </Button>
-                </div>
-              </article>
-            );
-          })
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>
