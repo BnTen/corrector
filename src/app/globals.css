@@ -108,3 +108,46 @@ body {
   text-decoration-color: var(--ds-sky);
   text-underline-offset: 3px;
 }
+
+/* Auto-correction visual diff: strikethrough original + highlighted new */
+.auto-correction {
+  position: relative;
+  display: inline;
+  border-radius: 4px;
+  padding: 0 3px;
+  background: color-mix(in srgb, var(--ds-lime) 45%, white);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition: background 0.3s ease;
+}
+
+.auto-correction::before {
+  content: attr(data-original);
+  display: inline;
+  margin-right: 0.3em;
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  color: color-mix(in srgb, var(--ds-coral) 85%, black);
+  opacity: 0.75;
+  font-weight: 400;
+  background: color-mix(in srgb, var(--ds-coral) 12%, transparent);
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+.auto-correction-spelling {
+  background: color-mix(in srgb, var(--ds-coral) 18%, white);
+}
+.auto-correction-grammar {
+  background: color-mix(in srgb, var(--ds-pink) 35%, white);
+}
+.auto-correction-conjugation {
+  background: color-mix(in srgb, var(--ds-lavender) 40%, white);
+}
+.auto-correction-punctuation {
+  background: color-mix(in srgb, var(--ds-yellow) 45%, white);
+}
+.auto-correction-style {
+  background: color-mix(in srgb, var(--ds-sky) 40%, white);
+}
+

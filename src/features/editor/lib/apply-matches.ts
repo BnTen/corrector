@@ -60,7 +60,10 @@ function prepareFixes(
   return fixes;
 }
 
-/** Apply safe replacements end→start in one transaction. */
+/**
+ * Apply replacements with visual diff mark:
+ * strikethrough original (via ::before) + highlighted new text.
+ */
 export function applyAllReplacements(
   editor: Editor,
   matches: LintMatch[],
@@ -68,6 +71,12 @@ export function applyAllReplacements(
 ): AppliedCorrection[] {
   const fixes = prepareFixes(matches, plainText);
   if (fixes.length === 0) return [];
+
+  const markType = editor.schema.marks.autoCorrection;
+  if (!markType) {
+    // Fallback without mark
+    return applyPlain(editor, fixes);
+  }
 
   const originalDoc = editor.state.doc;
   const sorted = [...fixes].sort((a, b) => b.match.offset - a.match.offset);
@@ -81,8 +90,42 @@ export function applyAllReplacements(
 
     const mappedFrom = tr.mapping.map(from);
     const mappedTo = tr.mapping.map(to);
+    const mark = markType.create({
+      original,
+      category: match.category,
+    });
+    const textNode = editor.schema.text(replacement, [mark]);
+    tr = tr.replaceWith(mappedFrom, mappedTo, textNode);
 
-    tr = tr.insertText(replacement, mappedFrom, mappedTo);
+    applied.push({
+      id: `${match.id}-${Date.now()}-${match.offset}`,
+      original,
+      replacement,
+      message: match.message,
+      category: match.category,
+      appliedAt: Date.now(),
+    });
+  }
+
+  if (applied.length === 0) return [];
+  editor.view.dispatch(tr);
+  return applied.reverse();
+}
+
+function applyPlain(
+  editor: Editor,
+  fixes: Array<{ match: LintMatch; replacement: string; original: string }>
+): AppliedCorrection[] {
+  const originalDoc = editor.state.doc;
+  const sorted = [...fixes].sort((a, b) => b.match.offset - a.match.offset);
+  let tr = editor.state.tr;
+  const applied: AppliedCorrection[] = [];
+
+  for (const { match, replacement, original } of sorted) {
+    const from = offsetToPos(originalDoc, match.offset);
+    const to = offsetToPos(originalDoc, match.offset + match.length);
+    if (from === null || to === null || to < from) continue;
+    tr = tr.insertText(replacement, tr.mapping.map(from), tr.mapping.map(to));
     applied.push({
       id: `${match.id}-${Date.now()}-${match.offset}`,
       original,

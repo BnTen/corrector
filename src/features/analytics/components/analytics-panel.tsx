@@ -18,9 +18,16 @@ export interface AnalyticsStats {
   byCategory?: Record<string, number>;
 }
 
+export interface MistakePair {
+  original: string;
+  replacement: string;
+  count: number;
+}
+
 export interface AnalyticsPanelProps {
   stats?: AnalyticsStats;
   matchCategories?: Record<string, number>;
+  topMistakes?: MistakePair[];
   accuracy?: number;
   totalErrors?: number;
   totalChecks?: number;
@@ -47,47 +54,59 @@ const CATEGORY_LABEL: Record<string, string> = {
   style: "Style",
 };
 
-function ActivityHeatmap() {
-  const cells = React.useMemo(
-    () =>
-      Array.from({ length: 7 * 12 }, (_, i) => {
-        const level = i % 7 === 0 ? 0 : (i * 3) % 4;
-        return level;
-      }),
-    []
-  );
+const BAR_COLOR: Record<string, string> = {
+  spelling: "bg-ds-coral",
+  grammar: "bg-ds-pink",
+  conjugation: "bg-ds-lavender",
+  punctuation: "bg-ds-yellow",
+  style: "bg-ds-sky",
+};
+
+function ErrorFrequencyChart({
+  categories,
+}: {
+  categories: Record<string, number>;
+}) {
+  const breakdown = categoryBreakdown(categories);
+  const max = Math.max(...breakdown.map((b) => b.count), 1);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <p className="text-xs font-medium uppercase tracking-wide text-ds-muted">
-        Activité (aperçu)
+        Tes fautes les plus fréquentes
       </p>
-      <div
-        className="grid grid-cols-12 gap-1"
-        aria-hidden
-        title="Heatmap placeholder"
-      >
-        {cells.map((level, index) => (
-          <span
-            key={index}
-            className={cn(
-              "aspect-square rounded-[3px]",
-              level === 0 && "bg-ds-border/80",
-              level === 1 && "bg-[#9aa3b2]",
-              level === 2 && "bg-[#2f3a56]",
-              level === 3 && "bg-ds-coral/80"
-            )}
-          />
-        ))}
-      </div>
-      <div className="flex items-center gap-2 text-[10px] text-ds-muted">
-        <span className="inline-block h-2 w-2 rounded-[2px] bg-ds-border/80" />
-        Faible
-        <span className="inline-block h-2 w-2 rounded-[2px] bg-[#2f3a56]" />
-        Moyen
-        <span className="inline-block h-2 w-2 rounded-[2px] bg-ds-coral/80" />
-        Fort
-      </div>
+      {breakdown.length === 0 ? (
+        <p className="text-sm text-ds-muted">
+          Pas encore assez de données — continue d’écrire.
+        </p>
+      ) : (
+        <div className="flex items-end gap-2 h-28 px-1">
+          {breakdown.map((item) => {
+            const height = Math.max(8, Math.round((item.count / max) * 100));
+            return (
+              <div
+                key={item.category}
+                className="flex h-full flex-1 flex-col items-center justify-end gap-1"
+                title={`${CATEGORY_LABEL[item.category] ?? item.category}: ${item.count}`}
+              >
+                <span className="text-[10px] font-semibold tabular-nums text-ds-ink">
+                  {item.count}
+                </span>
+                <div
+                  className={cn(
+                    "w-full max-w-[36px] rounded-t-md transition-all",
+                    BAR_COLOR[item.category] ?? "bg-ds-inverse"
+                  )}
+                  style={{ height: `${height}%` }}
+                />
+                <span className="max-w-full truncate text-[9px] text-ds-muted">
+                  {(CATEGORY_LABEL[item.category] ?? item.category).slice(0, 4)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -95,6 +114,7 @@ function ActivityHeatmap() {
 export function AnalyticsPanel({
   stats,
   matchCategories,
+  topMistakes = [],
   accuracy,
   totalErrors,
   totalChecks,
@@ -122,7 +142,7 @@ export function AnalyticsPanel({
   return (
     <Panel
       title="Analytics"
-      description="Précision et répartition des fautes"
+      description="Précision et profil de fautes"
       className={className}
     >
       <div className="space-y-4">
@@ -141,14 +161,14 @@ export function AnalyticsPanel({
           <MetricTile label="Mots" value={words} accent="lavender" />
         </div>
 
+        <ErrorFrequencyChart categories={categories} />
+
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-ds-muted">
-            Par catégorie
+            Répartition
           </p>
           {breakdown.length === 0 ? (
-            <p className="text-sm text-ds-muted">
-              Aucune faute pour le moment — lancez une correction.
-            </p>
+            <p className="text-sm text-ds-muted">Aucune faute pour le moment.</p>
           ) : (
             <ul className="space-y-2">
               {breakdown.map((item) => (
@@ -163,7 +183,10 @@ export function AnalyticsPanel({
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-ds-canvas">
                     <div
-                      className="h-full rounded-full bg-ds-inverse/80 transition-all"
+                      className={cn(
+                        "h-full rounded-full transition-all",
+                        BAR_COLOR[item.category] ?? "bg-ds-inverse/80"
+                      )}
                       style={{ width: `${Math.min(100, item.share)}%` }}
                     />
                   </div>
@@ -173,7 +196,34 @@ export function AnalyticsPanel({
           )}
         </div>
 
-        <ActivityHeatmap />
+        {topMistakes.length > 0 ? (
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-ds-muted">
+              Tes corrections récurrentes
+            </p>
+            <ul className="space-y-1.5">
+              {topMistakes.map((m) => (
+                <li
+                  key={`${m.original}-${m.replacement}`}
+                  className="flex items-center justify-between gap-2 rounded-lg bg-ds-canvas/60 px-2.5 py-1.5 text-xs"
+                >
+                  <span className="min-w-0 truncate">
+                    <span className="text-ds-muted line-through">
+                      {m.original}
+                    </span>
+                    <span className="mx-1 text-ds-muted">→</span>
+                    <span className="font-semibold text-ds-ink">
+                      {m.replacement}
+                    </span>
+                  </span>
+                  <span className="shrink-0 tabular-nums text-ds-muted">
+                    ×{m.count}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </div>
     </Panel>
   );

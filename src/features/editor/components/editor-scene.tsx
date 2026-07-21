@@ -14,6 +14,7 @@ import {
   getDocPlainText,
   refreshLintDecorations,
 } from "@/features/editor/extensions/lint-decorations";
+import { AutoCorrectionMark } from "@/features/editor/extensions/auto-correction-mark";
 import {
   useLiveCheck,
   type CheckLanguage,
@@ -24,6 +25,10 @@ import {
 } from "@/features/editor/lib/apply-matches";
 import { CorrectionThread } from "@/features/editor/components/correction-thread";
 import { EditorToolDock } from "@/features/editor/components/editor-tool-dock";
+import {
+  titleFromContent,
+  upsertArchive,
+} from "@/features/archives/lib/classeur-storage";
 
 function posToOffset(doc: ProseMirrorNode, targetPos: number): number {
   let counted = 0;
@@ -50,24 +55,35 @@ export interface EditorSceneProps {
   className?: string;
   hideToolDock?: boolean;
   onAppliedLogChange?: (log: AppliedCorrection[]) => void;
+  onArchiveSaved?: () => void;
+  /** External load request from classeur */
+  loadContent?: {
+    html?: string;
+    text: string;
+    archiveId?: string;
+    nonce?: number;
+  } | null;
 }
 
 export function EditorScene({
   className,
   hideToolDock,
   onAppliedLogChange,
+  onArchiveSaved,
+  loadContent,
 }: EditorSceneProps) {
   const [language, setLanguage] = React.useState<CheckLanguage>("fr");
   const [plainText, setPlainText] = React.useState("");
   const [caretOffset, setCaretOffset] = React.useState(0);
   const [autoCorrect, setAutoCorrect] = React.useState(true);
   const [appliedLog, setAppliedLog] = React.useState<AppliedCorrection[]>([]);
+  const [archiveId, setArchiveId] = React.useState<string | undefined>();
 
   const matchesRef = React.useRef<LintMatch[]>([]);
   const applyingRef = React.useRef(false);
   const lastFingerprintRef = React.useRef("");
-  const autoCorrectRef = React.useRef(autoCorrect);
-  autoCorrectRef.current = autoCorrect;
+  const appliedLogRef = React.useRef(appliedLog);
+  appliedLogRef.current = appliedLog;
 
   const { matches, checkedText, isChecking, error, checkNow } = useLiveCheck({
     text: plainText,
@@ -104,8 +120,9 @@ export function EditorScene({
       StarterKit,
       Placeholder.configure({
         placeholder:
-          "Écrivez… correction phrase par phrase, en direct.",
+          "Écrivez… les corrections apparaissent barrées → surlignées.",
       }),
+      AutoCorrectionMark,
       lintExtension,
     ],
     editorProps: {
@@ -127,7 +144,26 @@ export function EditorScene({
     },
   });
 
-  // Progressive auto-apply: only the latest sentence batch, when still fresh
+  // Load from classeur
+  React.useEffect(() => {
+    if (!editor || !loadContent) return;
+    if (loadContent.html) {
+      editor.commands.setContent(loadContent.html);
+    } else {
+      const escaped = loadContent.text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      editor.commands.setContent(
+        `<p>${escaped.replace(/\n/g, "</p><p>")}</p>`
+      );
+    }
+    setArchiveId(loadContent.archiveId);
+    lastFingerprintRef.current = "";
+    setPlainText(getDocPlainText(editor.state.doc));
+  }, [editor, loadContent]);
+
+  // Auto-apply with visual marks
   React.useEffect(() => {
     if (!editor || !autoCorrect || isChecking || applyingRef.current) return;
     if (checkedText !== plainText) return;
@@ -158,6 +194,24 @@ export function EditorScene({
     lastFingerprintRef.current = "";
   }, [language]);
 
+  // Auto-archive to classeur (debounce)
+  React.useEffect(() => {
+    if (!plainText.trim() || appliedLog.length === 0) return;
+    const timer = window.setTimeout(() => {
+      const html = editor?.getHTML();
+      const saved = upsertArchive({
+        id: archiveId,
+        title: titleFromContent(plainText),
+        content: plainText,
+        html,
+        corrections: appliedLogRef.current,
+      });
+      setArchiveId(saved.id);
+      onArchiveSaved?.();
+    }, 2500);
+    return () => window.clearTimeout(timer);
+  }, [plainText, appliedLog, archiveId, editor, onArchiveSaved]);
+
   return (
     <div className={cn("flex min-h-0 flex-col gap-3", className)}>
       {!hideToolDock ? (
@@ -180,10 +234,15 @@ export function EditorScene({
             </strong>
             {" · "}
             {autoCorrect ? "Correction progressive" : "Manuel"}
+            {" · "}
+            <span className="text-ds-ink">
+              <s className="opacity-60">faute</s> →{" "}
+              <mark className="rounded bg-ds-lime/50 px-0.5">corrigé</mark>
+            </span>
           </span>
           <span>
             {isChecking
-              ? "Analyse de la phrase…"
+              ? "Analyse…"
               : error
                 ? "Erreur API"
                 : `${appliedLog.length} corr.`}
@@ -199,7 +258,6 @@ export function EditorScene({
         ) : null}
       </div>
 
-      {/* Compact live log under editor — primary on mobile */}
       <div className="rounded-[14px] border border-ds-border/60 bg-ds-elevated p-3 shadow-ds-sm lg:hidden">
         <CorrectionThread
           appliedLog={appliedLog}
@@ -208,13 +266,9 @@ export function EditorScene({
         />
       </div>
 
-      {/* Desktop side log */}
       <div className="hidden lg:block">
         <div className="rounded-[14px] border border-ds-border/60 bg-ds-elevated p-4 shadow-ds-md">
-          <CorrectionThread
-            appliedLog={appliedLog}
-            isChecking={isChecking}
-          />
+          <CorrectionThread appliedLog={appliedLog} isChecking={isChecking} />
         </div>
       </div>
     </div>
