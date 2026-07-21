@@ -1,9 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Pill } from "@/shared/components/ui/pill";
+import { LocaleSwitcher } from "@/shared/i18n/locale-switcher";
+import { useI18n } from "@/shared/i18n/provider";
 
 export default function HomePage() {
+  const { t } = useI18n();
+
   return (
     <div className="relative min-h-dvh overflow-hidden bg-ds-canvas">
       <div
@@ -12,55 +18,53 @@ export default function HomePage() {
       />
 
       <header className="relative z-10 border-b border-ds-border/60 bg-white/70 backdrop-blur-xl safe-pt">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6 lg:px-10">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6 lg:px-10">
           <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ds-inverse text-ds-lime">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-ds-inverse text-ds-lime">
               <Sparkles className="h-4 w-4" />
             </span>
             <span className="text-sm font-semibold tracking-tight text-ds-ink">
-              Text Corrector
+              {t("brand.name")}
             </span>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LocaleSwitcher />
             <Link
               href="/login"
-              className="text-sm text-ds-muted transition-colors hover:text-ds-ink"
+              className="hidden text-sm text-ds-muted transition-colors hover:text-ds-ink sm:inline"
             >
-              Connexion
+              {t("nav.login")}
             </Link>
             <Button asChild size="sm" className="rounded-full">
-              <Link href="/try">Essayer</Link>
+              <Link href="/try">{t("common.tryCta")}</Link>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto flex min-h-[calc(100dvh-4rem)] max-w-3xl flex-col justify-center px-6 pb-16 pt-10 lg:px-10">
+      <main className="relative z-10 mx-auto flex min-h-[calc(100dvh-3.5rem)] max-w-3xl flex-col justify-center px-6 pb-12 pt-8 lg:px-10">
         <Pill tone="lime" className="w-fit">
-          Orthographe · Grammaire · Style
+          {t("landing.pill")}
         </Pill>
 
-        <h1 className="mt-6 text-5xl font-semibold tracking-tight text-ds-ink sm:text-6xl lg:text-7xl">
-          Text Corrector
+        <h1 className="mt-5 text-5xl font-semibold tracking-tight text-ds-ink sm:text-6xl lg:text-7xl">
+          {t("brand.name")}
         </h1>
 
-        <p className="mt-5 max-w-xl text-lg leading-relaxed text-ds-muted sm:text-xl">
-          Écrivez. On corrige. Texte propre en 10 secondes — 2 corrections
-          gratuites, pas de compte pour commencer.
+        <p className="mt-4 max-w-xl text-lg leading-relaxed text-ds-muted sm:text-xl">
+          {t("landing.subtitle")}
         </p>
 
-        <div className="mt-10 flex flex-wrap items-center gap-3">
+        <div className="mt-8 flex flex-wrap items-center gap-3">
           <Button asChild size="lg" className="rounded-full px-7">
-            <Link href="/try">Essayer maintenant</Link>
+            <Link href="/try">{t("common.tryNow")}</Link>
           </Button>
           <Button asChild variant="secondary" size="lg" className="rounded-full">
-            <Link href="/login">Se connecter</Link>
+            <Link href="/login">{t("common.signIn")}</Link>
           </Button>
         </div>
 
-        <p className="mt-6 text-sm text-ds-muted">
-          Playground instantané · email seulement au 3ᵉ crédit
-        </p>
+        <p className="mt-5 text-sm text-ds-muted">{t("landing.micro")}</p>
       </main>
     </div>
   );

@@ -9,7 +9,8 @@ import { QuizPanel } from "@/features/quiz/components/quiz-panel";
 import { ClasseurPanel } from "@/features/archives/components/classeur-panel";
 import { MetricTile } from "@/shared/components/ui/metric-tile";
 import { Button } from "@/shared/components/ui/button";
-import { appNav } from "@/shared/lib/app-nav";
+import { useAppNav } from "@/shared/lib/use-app-nav";
+import { useI18n } from "@/shared/i18n/provider";
 import {
   compileErrorFrequency,
   loadArchives,
@@ -17,6 +18,8 @@ import {
 } from "@/features/archives/lib/classeur-storage";
 
 export function DashboardClient({ showAdmin = false }: { showAdmin?: boolean }) {
+  const { t } = useI18n();
+  const nav = useAppNav("dashboard", { showAdmin });
   const archives = React.useMemo(() => loadArchives(), []);
 
   const matchCategories = React.useMemo(
@@ -37,42 +40,44 @@ export function DashboardClient({ showAdmin = false }: { showAdmin?: boolean }) 
   const totalWords = Math.max(totalErrors * 4, totalCorrections * 4, 0);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-ds-canvas">
-      <TopBar
-        navItems={appNav("dashboard", { showAdmin })}
-        showEditorCta={false}
-      >
+    <div className="flex h-dvh flex-col overflow-hidden bg-ds-canvas">
+      <TopBar navItems={nav} showEditorCta={false}>
         <SignOutButton />
       </TopBar>
 
-      <div className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-6 px-3 py-6 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 flex-col gap-4 overflow-y-auto px-3 py-4 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-ds-ink sm:text-3xl">
-              Dashboard
+            <h1 className="text-xl font-semibold tracking-tight text-ds-ink sm:text-2xl">
+              {t("dashboard.title")}
             </h1>
-            <p className="mt-1 text-sm text-ds-muted">
-              Compte connecté · corrections illimitées · progression locale
+            <p className="mt-0.5 text-sm text-ds-muted">
+              {t("dashboard.subtitle")}
             </p>
           </div>
           <Button asChild className="rounded-full">
-            <Link href="/workspace">Ouvrir l’éditeur</Link>
+            <Link href="/workspace">{t("common.openEditor")}</Link>
           </Button>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <MetricTile label="Documents" value={String(totalDocs)} />
-          <MetricTile label="Corrections" value={String(totalCorrections)} />
+        <div className="grid gap-2 sm:grid-cols-3">
           <MetricTile
-            label="Crédits"
-            value="Illimité"
-            hint="Compte complet"
+            label={t("dashboard.documents")}
+            value={String(totalDocs)}
+          />
+          <MetricTile
+            label={t("dashboard.corrections")}
+            value={String(totalCorrections)}
+          />
+          <MetricTile
+            label={t("dashboard.creditsLabel")}
+            value={t("common.unlimited")}
+            hint={t("dashboard.fullAccount")}
           />
         </div>
 
-        <div className="grid min-h-0 gap-4 lg:grid-cols-2">
+        <div className="grid min-h-0 gap-3 lg:grid-cols-2">
           <AnalyticsPanel
-            className="min-h-[320px]"
             matchCategories={matchCategories}
             topMistakes={topMistakes}
             totalErrors={totalErrors}
@@ -87,14 +92,13 @@ export function DashboardClient({ showAdmin = false }: { showAdmin?: boolean }) 
                   )
             }
           />
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             <ClasseurPanel
-              className="min-h-[200px]"
               onOpen={() => {
                 window.location.href = "/workspace";
               }}
             />
-            <QuizPanel className="min-h-[200px]" />
+            <QuizPanel />
           </div>
         </div>
       </div>

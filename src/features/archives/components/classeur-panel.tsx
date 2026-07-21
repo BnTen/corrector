@@ -10,6 +10,7 @@ import {
   loadArchives,
   type ArchiveEntry,
 } from "@/features/archives/lib/classeur-storage";
+import { useI18n } from "@/shared/i18n/provider";
 
 export interface ClasseurPanelProps {
   refreshKey?: number;
@@ -22,6 +23,7 @@ export function ClasseurPanel({
   onOpen,
   className,
 }: ClasseurPanelProps) {
+  const { t, locale } = useI18n();
   const [entries, setEntries] = React.useState<ArchiveEntry[]>([]);
 
   React.useEffect(() => {
@@ -35,22 +37,21 @@ export function ClasseurPanel({
 
   return (
     <Panel
-      title="Classeur"
-      description="Tes textes corrigés archivés"
+      title={t("binder.title")}
+      description={t("binder.desc")}
       className={className}
     >
       <div className="space-y-2">
         {entries.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-ds-border bg-ds-canvas/50 px-3 py-6 text-center text-sm text-ds-muted">
-            Aucune archive pour l’instant. Écris un texte — il sera classé
-            automatiquement.
+          <p className="rounded-lg border border-dashed border-ds-border bg-ds-canvas/40 px-3 py-3 text-center text-xs text-ds-muted">
+            {t("binder.empty")}
           </p>
         ) : (
           entries.map((entry) => (
             <article
               key={entry.id}
               className={cn(
-                "rounded-xl border border-ds-border/60 bg-ds-canvas/40 p-3 transition-shadow hover:shadow-ds-sm"
+                "rounded-xl border border-ds-border/60 bg-ds-canvas/40 p-2.5 transition-shadow hover:shadow-ds-sm"
               )}
             >
               <div className="flex items-start gap-2">
@@ -60,15 +61,17 @@ export function ClasseurPanel({
                     {entry.title}
                   </p>
                   <p className="mt-0.5 text-[11px] text-ds-muted">
-                    {new Date(entry.updatedAt).toLocaleString("fr-FR", {
-                      day: "2-digit",
-                      month: "short",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {new Date(entry.updatedAt).toLocaleString(
+                      locale === "fr" ? "fr-FR" : "en-US",
+                      {
+                        day: "2-digit",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )}
                     {" · "}
-                    {entry.corrections.length} correction
-                    {entry.corrections.length === 1 ? "" : "s"}
+                    {entry.corrections.length} {t("editor.corr")}
                   </p>
                 </div>
               </div>
@@ -80,7 +83,7 @@ export function ClasseurPanel({
                   onClick={() => onOpen?.(entry)}
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
-                  Ouvrir
+                  {t("binder.open")}
                 </Button>
                 <Button
                   size="sm"
@@ -89,7 +92,7 @@ export function ClasseurPanel({
                   onClick={() => handleDelete(entry.id)}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  Suppr.
+                  {t("binder.delete")}
                 </Button>
               </div>
             </article>

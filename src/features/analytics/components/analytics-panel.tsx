@@ -9,6 +9,7 @@ import {
   computeAccuracy,
 } from "@/features/analytics/lib/score-utils";
 import { cn } from "@/shared/lib/cn";
+import { useI18n } from "@/shared/i18n/provider";
 
 export interface AnalyticsStats {
   totalChecks?: number;
@@ -64,23 +65,20 @@ const BAR_COLOR: Record<string, string> = {
 
 function ErrorFrequencyChart({
   categories,
+  emptyLabel,
 }: {
   categories: Record<string, number>;
+  emptyLabel: string;
 }) {
   const breakdown = categoryBreakdown(categories);
   const max = Math.max(...breakdown.map((b) => b.count), 1);
 
   return (
-    <div className="space-y-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-ds-muted">
-        Tes fautes les plus fréquentes
-      </p>
+    <div className="space-y-2">
       {breakdown.length === 0 ? (
-        <p className="text-sm text-ds-muted">
-          Pas encore assez de données — continue d’écrire.
-        </p>
+        <p className="text-sm text-ds-muted">{emptyLabel}</p>
       ) : (
-        <div className="flex items-end gap-2 h-28 px-1">
+        <div className="flex h-20 items-end gap-2 px-1">
           {breakdown.map((item) => {
             const height = Math.max(8, Math.round((item.count / max) * 100));
             return (
@@ -121,6 +119,7 @@ export function AnalyticsPanel({
   totalWords,
   className,
 }: AnalyticsPanelProps) {
+  const { t } = useI18n();
   const categories = matchCategories ?? stats?.byCategory ?? {};
   const errors =
     totalErrors ??
@@ -141,41 +140,52 @@ export function AnalyticsPanel({
 
   return (
     <Panel
-      title="Analytics"
-      description="Précision et profil de fautes"
+      title={t("nav.stats")}
+      description={t("analytics.topMistakes")}
       className={className}
     >
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
           <MetricTile
-            label="Précision"
+            label={t("analytics.precision")}
             value={`${precision}%`}
             accent="lime"
           />
           <MetricTile
-            label="Fautes détectées"
+            label={t("analytics.mistakes")}
             value={errors}
             accent="coral"
           />
-          <MetricTile label="Checks" value={checks} accent="sky" />
-          <MetricTile label="Mots" value={words} accent="lavender" />
+          <MetricTile
+            label={t("analytics.checks")}
+            value={checks}
+            accent="sky"
+          />
+          <MetricTile
+            label={t("analytics.words")}
+            value={words}
+            accent="lavender"
+          />
         </div>
 
-        <ErrorFrequencyChart categories={categories} />
+        <ErrorFrequencyChart
+          categories={categories}
+          emptyLabel={t("analytics.noData")}
+        />
 
         <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-ds-muted">
-            Répartition
-          </p>
           {breakdown.length === 0 ? (
-            <p className="text-sm text-ds-muted">Aucune faute pour le moment.</p>
+            <p className="text-sm text-ds-muted">{t("analytics.noData")}</p>
           ) : (
             <ul className="space-y-2">
               {breakdown.map((item) => (
                 <li key={item.category} className="space-y-1">
                   <div className="flex items-center justify-between gap-2">
                     <Pill tone={CATEGORY_TONE[item.category] ?? "default"}>
-                      {CATEGORY_LABEL[item.category] ?? item.category}
+                      {t(`categories.${item.category}`) !==
+                      `categories.${item.category}`
+                        ? t(`categories.${item.category}`)
+                        : (CATEGORY_LABEL[item.category] ?? item.category)}
                     </Pill>
                     <span className="text-xs tabular-nums text-ds-muted">
                       {item.count} · {item.share}%

@@ -3,7 +3,5 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="min-h-dvh bg-ds-canvas">{children}</div>
-  );
+  return <div className="bg-ds-canvas">{children}</div>;
 }

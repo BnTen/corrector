@@ -5,6 +5,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { EMAIL_BONUS_CREDITS } from "@/features/funnel/lib/constants";
+import { useI18n } from "@/shared/i18n/provider";
 
 export interface EmailGateModalProps {
   open: boolean;
@@ -17,6 +18,7 @@ export function EmailGateModal({
   onOpenChange,
   onSuccess,
 }: EmailGateModalProps) {
+  const { t } = useI18n();
   const [email, setEmail] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -27,7 +29,7 @@ export function EmailGateModal({
 
     const trimmed = email.trim().toLowerCase();
     if (!trimmed || !trimmed.includes("@")) {
-      setError("Indiquez une adresse email valide.");
+      setError(t("funnel.invalidEmail"));
       return;
     }
 
@@ -44,14 +46,14 @@ export function EmailGateModal({
       } | null;
 
       if (!response.ok) {
-        setError(data?.error || "Impossible d’enregistrer l’email.");
+        setError(data?.error || t("funnel.saveFailed"));
         return;
       }
 
       onSuccess(trimmed, data?.creditsGranted ?? EMAIL_BONUS_CREDITS);
       setEmail("");
     } catch {
-      setError("Réseau indisponible. Réessayez.");
+      setError(t("funnel.network"));
     } finally {
       setIsSubmitting(false);
     }
@@ -60,33 +62,32 @@ export function EmailGateModal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[100] bg-ds-inverse/45 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[101] w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-[16px] border border-ds-border bg-ds-elevated p-6 shadow-ds-md focus:outline-none">
+        <Dialog.Overlay className="fixed inset-0 z-[100] bg-ds-inverse/45 backdrop-blur-sm" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-[101] w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-[16px] border border-ds-border bg-ds-elevated p-5 shadow-ds-md focus:outline-none">
           <div className="flex items-start justify-between gap-3">
             <div>
               <Dialog.Title className="text-lg font-semibold tracking-tight text-ds-ink">
-                Débloquez {EMAIL_BONUS_CREDITS} corrections
+                {t("funnel.unlockTitle", { n: EMAIL_BONUS_CREDITS })}
               </Dialog.Title>
               <Dialog.Description className="mt-1.5 text-sm leading-relaxed text-ds-muted">
-                Vos 2 essais gratuits sont utilisés. Laissez votre email pour
-                continuer — pas de mot de passe.
+                {t("funnel.unlockDesc")}
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>
               <button
                 type="button"
                 className="rounded-lg p-1.5 text-ds-muted transition hover:bg-ds-canvas hover:text-ds-ink"
-                aria-label="Fermer"
+                aria-label={t("common.close")}
               >
                 <X className="h-4 w-4" />
               </button>
             </Dialog.Close>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-5 space-y-3">
+          <form onSubmit={handleSubmit} className="mt-4 space-y-3">
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-ds-muted">
-                Email
+                {t("common.email")}
               </span>
               <input
                 type="email"
@@ -94,7 +95,7 @@ export function EmailGateModal({
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="vous@exemple.fr"
+                placeholder="you@example.com"
                 className="h-11 w-full rounded-[12px] border border-ds-border bg-white px-3 text-sm text-ds-ink outline-none ring-ds-lime placeholder:text-ds-muted/70 focus:ring-2"
               />
             </label>
@@ -110,8 +111,8 @@ export function EmailGateModal({
               disabled={isSubmitting}
             >
               {isSubmitting
-                ? "Envoi…"
-                : `Continuer · +${EMAIL_BONUS_CREDITS} crédits`}
+                ? t("funnel.sending")
+                : t("funnel.continue", { n: EMAIL_BONUS_CREDITS })}
             </Button>
           </form>
         </Dialog.Content>

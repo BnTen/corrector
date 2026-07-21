@@ -57,8 +57,8 @@ body {
 /* TipTap editor */
 .ProseMirror {
   outline: none;
-  min-height: 240px;
-  line-height: 1.7;
+  min-height: 160px;
+  line-height: 1.65;
 }
 
 .ProseMirror p {

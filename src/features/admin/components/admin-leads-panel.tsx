@@ -3,6 +3,7 @@
 import * as React from "react";
 import { MetricTile } from "@/shared/components/ui/metric-tile";
 import { Panel } from "@/shared/components/ui/panel";
+import { useI18n } from "@/shared/i18n/provider";
 
 interface LeadRow {
   id: string;
@@ -13,6 +14,7 @@ interface LeadRow {
 }
 
 export function AdminLeadsPanel() {
+  const { t } = useI18n();
   const [leads, setLeads] = React.useState<LeadRow[]>([]);
   const [stats, setStats] = React.useState<{
     totalLeads: number;
@@ -51,38 +53,35 @@ export function AdminLeadsPanel() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid gap-3 sm:grid-cols-2">
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-2 sm:grid-cols-2">
         <MetricTile
-          label="Leads (liste)"
+          label={t("admin.leadsList")}
           value={loading ? "…" : String(stats?.totalLeads ?? leads.length)}
         />
         <MetricTile
-          label="Leads 7 jours"
+          label={t("admin.leads7d")}
           value={loading ? "…" : String(stats?.leads7d ?? 0)}
           accent="sky"
         />
       </div>
 
-      <Panel
-        title="Leads email"
-        description="Capture playground (gate 3ᵉ correction)"
-      >
+      <Panel title={t("admin.leadsEmail")} description={t("admin.leadsDesc")}>
         {error ? (
           <p className="text-sm text-ds-coral">{error}</p>
         ) : loading ? (
-          <p className="text-sm text-ds-muted">Chargement…</p>
+          <p className="text-sm text-ds-muted">{t("common.loading")}</p>
         ) : leads.length === 0 ? (
-          <p className="text-sm text-ds-muted">Aucun lead pour l’instant.</p>
+          <p className="text-sm text-ds-muted">{t("admin.none")}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[480px] text-left text-sm">
               <thead>
                 <tr className="border-b border-ds-border text-xs uppercase tracking-wide text-ds-muted">
-                  <th className="pb-2 pr-3 font-medium">Email</th>
-                  <th className="pb-2 pr-3 font-medium">Source</th>
-                  <th className="pb-2 pr-3 font-medium">Crédits</th>
-                  <th className="pb-2 font-medium">Date</th>
+                  <th className="pb-2 pr-3 font-medium">{t("common.email")}</th>
+                  <th className="pb-2 pr-3 font-medium">{t("admin.source")}</th>
+                  <th className="pb-2 pr-3 font-medium">{t("admin.credits")}</th>
+                  <th className="pb-2 font-medium">{t("admin.date")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -91,16 +90,13 @@ export function AdminLeadsPanel() {
                     key={lead.id}
                     className="border-b border-ds-border/50 text-ds-ink"
                   >
-                    <td className="py-2.5 pr-3 font-medium">{lead.email}</td>
-                    <td className="py-2.5 pr-3 text-ds-muted">{lead.source}</td>
-                    <td className="py-2.5 pr-3 tabular-nums">
+                    <td className="py-2 pr-3 font-medium">{lead.email}</td>
+                    <td className="py-2 pr-3 text-ds-muted">{lead.source}</td>
+                    <td className="py-2 pr-3 tabular-nums">
                       {lead.credits_granted}
                     </td>
-                    <td className="py-2.5 tabular-nums text-ds-muted">
-                      {new Date(lead.created_at).toLocaleString("fr-FR", {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      })}
+                    <td className="py-2 tabular-nums text-ds-muted">
+                      {new Date(lead.created_at).toLocaleString()}
                     </td>
                   </tr>
                 ))}

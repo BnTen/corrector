@@ -30,6 +30,7 @@ import {
   titleFromContent,
   upsertArchive,
 } from "@/features/archives/lib/classeur-storage";
+import { useI18n } from "@/shared/i18n/provider";
 
 function posToOffset(doc: ProseMirrorNode, targetPos: number): number {
   let counted = 0;
@@ -83,12 +84,17 @@ export function EditorScene({
   onCreditsExhausted,
   loadContent,
 }: EditorSceneProps) {
-  const [language, setLanguage] = React.useState<CheckLanguage>("fr");
+  const { t, checkLanguage } = useI18n();
+  const [language, setLanguage] = React.useState<CheckLanguage>(checkLanguage);
   const [plainText, setPlainText] = React.useState("");
   const [caretOffset, setCaretOffset] = React.useState(0);
   const [autoCorrect, setAutoCorrect] = React.useState(true);
   const [appliedLog, setAppliedLog] = React.useState<AppliedCorrection[]>([]);
   const [archiveId, setArchiveId] = React.useState<string | undefined>();
+
+  React.useEffect(() => {
+    setLanguage(checkLanguage);
+  }, [checkLanguage]);
 
   const matchesRef = React.useRef<LintMatch[]>([]);
   const applyingRef = React.useRef(false);
@@ -130,8 +136,7 @@ export function EditorScene({
     extensions: [
       StarterKit,
       Placeholder.configure({
-        placeholder:
-          "Écrivez… les corrections apparaissent barrées → surlignées.",
+        placeholder: t("editor.placeholder"),
       }),
       AutoCorrectionMark,
       lintExtension,
@@ -139,7 +144,7 @@ export function EditorScene({
     editorProps: {
       attributes: {
         class:
-          "prose prose-neutral max-w-none min-h-[42vh] lg:min-h-[320px] px-1 py-2 text-base leading-relaxed focus:outline-none sm:min-h-[280px]",
+          "prose prose-neutral max-w-none min-h-[180px] px-1 py-2 text-base leading-relaxed focus:outline-none sm:min-h-[200px] lg:min-h-[220px]",
       },
     },
     onUpdate: ({ editor: ed }) => {
@@ -252,7 +257,7 @@ export function EditorScene({
   }, [plainText, appliedLog, archiveId, editor, onArchiveSaved]);
 
   return (
-    <div className={cn("flex min-h-0 flex-col gap-3", className)}>
+    <div className={cn("flex min-h-0 flex-col gap-2", className)}>
       {!hideToolDock ? (
         <EditorToolDock
           editor={editor}
@@ -265,34 +270,33 @@ export function EditorScene({
         />
       ) : null}
 
-      <div className="overflow-hidden rounded-[16px] border border-ds-border/70 bg-ds-elevated shadow-ds-md">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ds-border/50 bg-gradient-to-r from-ds-canvas/80 to-white px-4 py-2.5 sm:px-5">
+      <div className="min-h-0 flex-1 overflow-hidden rounded-[14px] border border-ds-border/70 bg-ds-elevated shadow-ds-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ds-border/50 px-3 py-1.5 sm:px-4">
           <span className="text-xs text-ds-muted">
             <strong className="text-ds-ink">
               {language === "fr" ? "FR" : "EN"}
             </strong>
             {" · "}
-            {autoCorrect ? "Correction progressive" : "Manuel"}
-            {" · "}
-            <span className="text-ds-ink">
-              <s className="opacity-60">faute</s> →{" "}
-              <mark className="rounded bg-ds-lime/50 px-0.5">corrigé</mark>
-            </span>
+            {autoCorrect ? t("editor.progressive") : t("editor.manual")}
           </span>
           <span className="text-xs font-medium tabular-nums text-ds-muted">
             {typeof creditsRemaining === "number"
-              ? `${creditsRemaining} crédit${creditsRemaining === 1 ? "" : "s"}`
+              ? `${creditsRemaining} ${
+                  creditsRemaining === 1
+                    ? t("common.credit")
+                    : t("common.credits")
+                }`
               : null}
             {typeof creditsRemaining === "number" ? " · " : null}
             {isChecking
-              ? "Analyse…"
+              ? t("editor.analyzing")
               : error
-                ? "Erreur API"
-                : `${appliedLog.length} corr.`}
+                ? t("editor.apiError")
+                : `${appliedLog.length} ${t("editor.corr")}`}
           </span>
         </div>
 
-        <div className="px-3 py-3 sm:px-5 sm:py-4">
+        <div className="px-3 py-2 sm:px-4 sm:py-3">
           <EditorContent editor={editor} />
           {error ? (
             <p className="mt-2 text-xs text-ds-coral" role="alert">
@@ -302,20 +306,14 @@ export function EditorScene({
         </div>
       </div>
 
-      {/* Clean corrected text + copy CTA */}
-      <CleanTextPanel text={plainText} correctionCount={appliedLog.length} />
-
-      <div className="rounded-[16px] border border-ds-border/60 bg-ds-elevated p-3 shadow-ds-sm lg:hidden">
-        <CorrectionThread
-          appliedLog={appliedLog}
-          isChecking={isChecking}
-          compact
-        />
-      </div>
-
-      <div className="hidden lg:block">
-        <div className="rounded-[16px] border border-ds-border/60 bg-ds-elevated p-4 shadow-ds-md">
-          <CorrectionThread appliedLog={appliedLog} isChecking={isChecking} />
+      <div className="grid shrink-0 gap-2 lg:grid-cols-2">
+        <CleanTextPanel text={plainText} correctionCount={appliedLog.length} />
+        <div className="rounded-[14px] border border-ds-border/60 bg-ds-elevated p-2.5 shadow-ds-sm">
+          <CorrectionThread
+            appliedLog={appliedLog}
+            isChecking={isChecking}
+            compact
+          />
         </div>
       </div>
     </div>

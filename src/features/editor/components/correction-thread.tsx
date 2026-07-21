@@ -8,6 +8,7 @@ import {
   CATEGORY_LABELS,
   CATEGORY_TONES,
 } from "@/features/editor/lib/category-meta";
+import { useI18n } from "@/shared/i18n/provider";
 
 export interface CorrectionThreadProps {
   appliedLog: AppliedCorrection[];
@@ -22,45 +23,55 @@ export function CorrectionThread({
   className,
   compact,
 }: CorrectionThreadProps) {
+  const { t, locale } = useI18n();
+
+  function categoryLabel(category: AppliedCorrection["category"]) {
+    const key = `categories.${category}` as const;
+    const translated = t(key);
+    return translated === key ? CATEGORY_LABELS[category] : translated;
+  }
+
   return (
     <div className={cn("flex min-h-0 flex-col", className)}>
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-ds-ink">Live</h3>
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-ds-ink">
+          {t("editor.threadLive")}
+        </h3>
         <span className="text-xs text-ds-muted">
           {isChecking
-            ? "Analyse…"
-            : `${appliedLog.length} correction${appliedLog.length === 1 ? "" : "s"}`}
+            ? t("editor.analyzing")
+            : `${appliedLog.length} ${t("editor.corr")}`}
         </span>
       </div>
 
       <div
         className={cn(
-          "flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto",
-          compact && "max-h-36"
+          "flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto",
+          compact && "max-h-28"
         )}
       >
         {appliedLog.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-ds-border bg-ds-canvas/50 px-3 py-4 text-center text-xs text-ds-muted">
-            {isChecking
-              ? "Correction en cours…"
-              : "Les fautes se corrigent phrase par phrase pendant que vous écrivez."}
+          <p className="rounded-lg border border-dashed border-ds-border bg-ds-canvas/40 px-3 py-3 text-center text-xs text-ds-muted">
+            {t("editor.threadEmpty")}
           </p>
         ) : (
-          appliedLog.slice(0, compact ? 8 : 30).map((item) => (
+          appliedLog.slice(0, compact ? 6 : 20).map((item) => (
             <div
               key={item.id}
-              className="flex items-start gap-2 rounded-xl border border-ds-border/50 bg-ds-canvas/40 px-2.5 py-2"
+              className="flex items-start gap-2 rounded-lg border border-ds-border/50 bg-ds-canvas/40 px-2 py-1.5"
             >
               <Pill tone={CATEGORY_TONES[item.category]} className="shrink-0">
-                {CATEGORY_LABELS[item.category]}
+                {locale === "en"
+                  ? categoryLabel(item.category)
+                  : CATEGORY_LABELS[item.category]}
               </Pill>
               <div className="min-w-0 flex-1 text-xs leading-snug">
                 <p className="truncate text-ds-ink">
                   <span className="text-ds-muted line-through">
                     {item.original}
                   </span>
-                  <span className="mx-1 text-ds-muted">→</span>
-                  <span className="font-semibold">{item.replacement}</span>
+                  {" → "}
+                  <span className="font-medium">{item.replacement}</span>
                 </p>
               </div>
             </div>

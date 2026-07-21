@@ -11,17 +11,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
+import { LocaleSwitcher } from "@/shared/i18n/locale-switcher";
+import { useI18n } from "@/shared/i18n/provider";
 
-function SubmitButton() {
+function SubmitButton({ label, pendingLabel }: { label: string; pendingLabel: string }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? "Connexion…" : "Se connecter"}
+      {pending ? pendingLabel : label}
     </Button>
   );
 }
 
 export function LoginForm() {
+  const { t } = useI18n();
   const [state, formAction] = useFormState<AuthActionResult | undefined, FormData>(
     signIn,
     undefined
@@ -30,19 +33,17 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Connexion</CardTitle>
-        <CardDescription>
-          Accédez à votre espace Text Corrector.
-        </CardDescription>
+        <div className="mb-2 flex justify-end">
+          <LocaleSwitcher className="bg-ds-canvas ring-ds-border" />
+        </div>
+        <CardTitle>{t("auth.loginTitle")}</CardTitle>
+        <CardDescription>{t("auth.loginDesc")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <form action={formAction} className="space-y-4">
           <div className="space-y-1.5">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium text-ds-ink"
-            >
-              Email
+            <label htmlFor="email" className="text-sm font-medium text-ds-ink">
+              {t("common.email")}
             </label>
             <input
               id="email"
@@ -58,7 +59,7 @@ export function LoginForm() {
               htmlFor="password"
               className="text-sm font-medium text-ds-ink"
             >
-              Mot de passe
+              {t("common.password")}
             </label>
             <input
               id="password"
@@ -76,20 +77,23 @@ export function LoginForm() {
             </p>
           ) : null}
 
-          <SubmitButton />
+          <SubmitButton
+            label={t("common.signIn")}
+            pendingLabel={t("auth.signingIn")}
+          />
         </form>
 
         <Button type="button" variant="secondary" className="w-full" disabled>
-          Google (bientôt)
+          {t("auth.googleSoon")}
         </Button>
 
         <p className="text-center text-sm text-ds-muted">
-          Pas encore de compte ?{" "}
+          {t("auth.noAccount")}{" "}
           <Link
             href="/signup"
             className="font-medium text-ds-ink underline-offset-4 hover:underline"
           >
-            Créer un compte
+            {t("common.createAccount")}
           </Link>
         </p>
       </CardContent>

@@ -4,6 +4,7 @@ import * as React from "react";
 import { Check, Copy, FileCheck2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/cn";
+import { useI18n } from "@/shared/i18n/provider";
 
 export interface CleanTextPanelProps {
   text: string;
@@ -16,6 +17,7 @@ export function CleanTextPanel({
   correctionCount = 0,
   className,
 }: CleanTextPanelProps) {
+  const { t } = useI18n();
   const [copied, setCopied] = React.useState(false);
   const trimmed = text.trim();
   const isEmpty = trimmed.length === 0;
@@ -27,7 +29,6 @@ export function CleanTextPanel({
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback
       const ta = document.createElement("textarea");
       ta.value = trimmed;
       document.body.appendChild(ta);
@@ -42,61 +43,60 @@ export function CleanTextPanel({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-[16px] border border-ds-border/70 bg-ds-elevated shadow-ds-md",
+        "overflow-hidden rounded-[14px] border border-ds-border/70 bg-ds-elevated shadow-ds-sm",
         className
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ds-border/60 bg-gradient-to-r from-ds-canvas via-white to-ds-lime/20 px-4 py-3 sm:px-5">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ds-inverse text-ds-lime">
-            <FileCheck2 className="h-4 w-4" />
+      <div className="flex items-center justify-between gap-2 border-b border-ds-border/60 px-3 py-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ds-inverse text-ds-lime">
+            <FileCheck2 className="h-3.5 w-3.5" />
           </span>
-          <div>
-            <h3 className="text-sm font-semibold text-ds-ink">
-              Texte corrigé
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-semibold text-ds-ink">
+              {t("editor.cleanTitle")}
             </h3>
-            <p className="text-xs text-ds-muted">
-              Version propre, prête à coller
-              {correctionCount > 0 ? ` · ${correctionCount} corr.` : ""}
-            </p>
+            {correctionCount > 0 ? (
+              <p className="text-[11px] text-ds-muted">
+                {correctionCount} {t("editor.corr")}
+              </p>
+            ) : null}
           </div>
         </div>
 
         <Button
           type="button"
-          size="lg"
+          size="sm"
           onClick={handleCopy}
           disabled={isEmpty}
           className={cn(
-            "min-w-[160px] rounded-full font-semibold shadow-ds-md transition-all",
-            copied
-              ? "bg-emerald-600 text-white hover:bg-emerald-600"
-              : "bg-ds-inverse text-white hover:bg-ds-inverse/90"
+            "shrink-0 rounded-full font-semibold",
+            copied && "bg-emerald-600 text-white hover:bg-emerald-600"
           )}
         >
           {copied ? (
             <>
-              <Check className="h-4 w-4" />
-              Copié !
+              <Check className="h-3.5 w-3.5" />
+              {t("common.copied")}
             </>
           ) : (
             <>
-              <Copy className="h-4 w-4" />
-              Copier le texte
+              <Copy className="h-3.5 w-3.5" />
+              {t("common.copy")}
             </>
           )}
         </Button>
       </div>
 
-      <div className="px-4 py-4 sm:px-5 sm:py-5">
+      <div className="px-3 py-2.5">
         {isEmpty ? (
-          <p className="rounded-xl border border-dashed border-ds-border bg-ds-canvas/50 px-4 py-8 text-center text-sm text-ds-muted">
-            Ton texte corrigé apparaîtra ici, sans barrés ni surlignages.
+          <p className="rounded-lg border border-dashed border-ds-border bg-ds-canvas/40 px-3 py-3 text-center text-xs text-ds-muted">
+            {t("editor.cleanEmpty")}
           </p>
         ) : (
           <div
-            className="max-h-[240px] overflow-y-auto rounded-xl bg-ds-canvas/40 px-4 py-3 text-[15px] leading-relaxed text-ds-ink sm:max-h-[280px]"
-            aria-label="Texte corrigé sans décoration"
+            className="max-h-[120px] overflow-y-auto rounded-lg bg-ds-canvas/40 px-3 py-2 text-sm leading-relaxed text-ds-ink"
+            aria-label={t("editor.cleanTitle")}
           >
             <p className="whitespace-pre-wrap">{trimmed}</p>
           </div>

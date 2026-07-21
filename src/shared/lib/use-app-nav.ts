@@ -1,13 +1,13 @@
-import type { TopBarNavItem } from "@/shared/components/ui/top-bar";
-import { translate } from "@/shared/i18n/translate";
-import type { UiLocale } from "@/shared/i18n/config";
+"use client";
 
-export function appNav(
+import type { TopBarNavItem } from "@/shared/components/ui/top-bar";
+import { useI18n } from "@/shared/i18n/provider";
+
+export function useAppNav(
   active: "workspace" | "dashboard" | "admin",
-  options?: { showAdmin?: boolean; locale?: UiLocale }
+  options?: { showAdmin?: boolean }
 ): TopBarNavItem[] {
-  const locale = options?.locale ?? "en";
-  const t = (key: string) => translate(locale, key);
+  const { t } = useI18n();
 
   const items: TopBarNavItem[] = [
     {

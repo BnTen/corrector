@@ -1,6 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/server/supabase/middleware";
+import {
+  applyLocaleCookie,
+  detectUiLocale,
+} from "@/shared/i18n/detect";
+import { UI_LOCALE_COOKIE, isUiLocale } from "@/shared/i18n/config";
 
 const AUTH_GATED = ["/workspace", "/dashboard", "/admin"];
 
@@ -8,11 +13,21 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  const hadLocaleCookie = isUiLocale(
+    request.cookies.get(UI_LOCALE_COOKIE)?.value
+  );
+  const locale = detectUiLocale(request);
+
+  let response: NextResponse;
+
   if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.next();
+    response = NextResponse.next();
+    return applyLocaleCookie(response, locale, hadLocaleCookie);
   }
 
-  const response = await updateSession(request);
+  response = await updateSession(request);
+  response = applyLocaleCookie(response, locale, hadLocaleCookie);
+
   const path = request.nextUrl.pathname;
   const needsAuth = AUTH_GATED.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}/`)
@@ -38,7 +53,8 @@ export async function middleware(request: NextRequest) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/login";
       loginUrl.searchParams.set("next", request.nextUrl.pathname);
-      return NextResponse.redirect(loginUrl);
+      const redirect = NextResponse.redirect(loginUrl);
+      return applyLocaleCookie(redirect, locale, hadLocaleCookie);
     }
   }
 

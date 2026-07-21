@@ -1,6 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { cookies } from "next/headers";
 import "./globals.css";
+import { LocaleProvider } from "@/shared/i18n/provider";
+import {
+  DEFAULT_UI_LOCALE,
+  UI_LOCALE_COOKIE,
+  isUiLocale,
+  type UiLocale,
+} from "@/shared/i18n/config";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -16,7 +24,7 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Text Corrector",
   description:
-    "Correcteur de texte intelligent — orthographe, grammaire et style en temps réel. 2 corrections gratuites, sans compte.",
+    "Smart text corrector — spelling, grammar and style in real time. 2 free corrections, no account required.",
   manifest: "/manifest.webmanifest",
   applicationName: "Text Corrector",
 };
@@ -28,17 +36,24 @@ export const viewport: Viewport = {
   themeColor: "#14151a",
 };
 
+function readInitialLocale(): UiLocale {
+  const value = cookies().get(UI_LOCALE_COOKIE)?.value;
+  return isUiLocale(value) ? value : DEFAULT_UI_LOCALE;
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = readInitialLocale();
+
   return (
-    <html lang="fr">
+    <html lang={locale}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
       </body>
     </html>
   );
