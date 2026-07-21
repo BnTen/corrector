@@ -145,7 +145,7 @@ export function AnalyticsPanel({
       className={className}
     >
       <div className="space-y-3">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           <MetricTile
             label={t("analytics.precision")}
             value={`${precision}%`}

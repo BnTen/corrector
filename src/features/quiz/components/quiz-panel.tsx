@@ -85,11 +85,7 @@ export function QuizPanel({ className }: QuizPanelProps) {
   }
 
   return (
-    <Panel
-      title="Quiz"
-      description="Exercices issus de vos fautes récentes"
-      className={className}
-    >
+    <Panel as="section" className={className}>
       {loading ? (
         <p className="text-sm text-ds-muted">Chargement des exercices…</p>
       ) : null}

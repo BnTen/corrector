@@ -8,6 +8,7 @@ import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { useAppNav } from "@/shared/lib/use-app-nav";
 import { useI18n } from "@/shared/i18n/provider";
 import { cn } from "@/shared/lib/cn";
+import { APP_GUTTER_X, APP_MAX_WIDTH } from "@/shared/lib/layout";
 
 export interface WorkspaceShellProps {
   classeur: React.ReactNode;
@@ -15,6 +16,7 @@ export interface WorkspaceShellProps {
   className?: string;
   binderOpen?: boolean;
   onBinderOpenChange?: (open: boolean) => void;
+  showAdmin?: boolean;
 }
 
 function MobileChatBar({
@@ -27,7 +29,12 @@ function MobileChatBar({
   const { t } = useI18n();
 
   return (
-    <div className="mx-auto flex h-10 max-w-[1400px] items-center gap-1.5 overflow-x-auto px-3">
+    <div
+      className={cn(
+        "mx-auto flex h-10 max-w-[1400px] items-center gap-1.5 overflow-x-auto",
+        APP_GUTTER_X
+      )}
+    >
       <button
         type="button"
         onClick={onToggleBinder}
@@ -58,9 +65,10 @@ export function WorkspaceShell({
   className,
   binderOpen: controlledBinderOpen,
   onBinderOpenChange,
+  showAdmin = false,
 }: WorkspaceShellProps) {
   const { t } = useI18n();
-  const nav = useAppNav("workspace");
+  const nav = useAppNav("workspace", { showAdmin });
   const [internalBinder, setInternalBinder] = React.useState(false);
   const binderOpen = controlledBinderOpen ?? internalBinder;
   const setBinderOpen = onBinderOpenChange ?? setInternalBinder;
@@ -85,12 +93,22 @@ export function WorkspaceShell({
         <SignOutButton />
       </TopBar>
 
-      <div className="relative mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 overflow-hidden">
+      <div
+        className={cn(
+          "relative mx-auto flex min-h-0 w-full flex-1 overflow-hidden",
+          APP_MAX_WIDTH
+        )}
+      >
         <aside className="hidden w-[260px] shrink-0 flex-col border-r border-ds-border/60 bg-ds-elevated/80 lg:flex">
-          <div className="min-h-0 flex-1 overflow-y-auto p-2">{classeur}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-3">{classeur}</div>
         </aside>
 
-        <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto px-2 py-2 sm:px-3 lg:px-4">
+        <main
+          className={cn(
+            "flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto py-3 sm:py-4",
+            APP_GUTTER_X
+          )}
+        >
           {children}
         </main>
 
@@ -103,7 +121,7 @@ export function WorkspaceShell({
               onClick={() => setBinderOpen(false)}
             />
             <div className="relative z-10 flex h-full w-[min(320px,88vw)] flex-col bg-ds-elevated shadow-ds-md">
-              <div className="flex items-center justify-between border-b border-ds-border/60 px-3 py-2">
+              <div className="flex items-center justify-between border-b border-ds-border/60 px-3 py-2.5">
                 <h2 className="text-sm font-semibold text-ds-ink">
                   {t("nav.binder")}
                 </h2>
@@ -115,7 +133,7 @@ export function WorkspaceShell({
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto p-2">
+              <div className="min-h-0 flex-1 overflow-y-auto p-3">
                 {classeur}
               </div>
             </div>

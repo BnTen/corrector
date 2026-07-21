@@ -20,6 +20,8 @@ export interface ClasseurPanelProps {
   className?: string;
   /** Compact rail mode (no Panel chrome). */
   rail?: boolean;
+  /** When false, omit the local title (e.g. parent Panel already has one). */
+  showHeader?: boolean;
 }
 
 export function ClasseurPanel({
@@ -29,6 +31,7 @@ export function ClasseurPanel({
   onCreated,
   className,
   rail = true,
+  showHeader = true,
 }: ClasseurPanelProps) {
   const { t, locale } = useI18n();
   const [entries, setEntries] = React.useState<ArchiveEntry[]>([]);
@@ -55,18 +58,20 @@ export function ClasseurPanel({
   return (
     <div className={cn("flex h-full min-h-0 flex-col", className)}>
       <div className="mb-2 shrink-0 space-y-2">
-        {!rail ? (
-          <div>
-            <h2 className="text-sm font-semibold text-ds-ink">
+        {showHeader ? (
+          !rail ? (
+            <div>
+              <h2 className="text-sm font-semibold text-ds-ink">
+                {t("binder.title")}
+              </h2>
+              <p className="text-[11px] text-ds-muted">{t("binder.desc")}</p>
+            </div>
+          ) : (
+            <p className="px-1 text-[11px] font-medium uppercase tracking-wide text-ds-muted">
               {t("binder.title")}
-            </h2>
-            <p className="text-[11px] text-ds-muted">{t("binder.desc")}</p>
-          </div>
-        ) : (
-          <p className="px-1 text-[11px] font-medium uppercase tracking-wide text-ds-muted">
-            {t("binder.title")}
-          </p>
-        )}
+            </p>
+          )
+        ) : null}
 
         <Button
           type="button"

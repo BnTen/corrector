@@ -43,7 +43,7 @@ export function CleanTextPanel({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-[14px] border border-ds-border/70 bg-ds-elevated shadow-ds-sm",
+        "overflow-hidden rounded-ds-md border border-ds-border/70 bg-ds-elevated shadow-ds-sm",
         className
       )}
     >

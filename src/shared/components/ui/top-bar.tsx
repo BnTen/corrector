@@ -6,6 +6,7 @@ import { Sparkles } from "lucide-react";
 import { cn } from "@/shared/lib/cn";
 import { LocaleSwitcher } from "@/shared/i18n/locale-switcher";
 import { useI18n } from "@/shared/i18n/provider";
+import { APP_GUTTER_X, APP_MAX_WIDTH } from "@/shared/lib/layout";
 
 export interface TopBarNavItem {
   href?: string;
@@ -54,7 +55,13 @@ export function TopBar({
         aria-hidden
       />
 
-      <div className="mx-auto flex h-12 max-w-[1400px] items-center gap-2 px-3 sm:h-14 sm:gap-3 sm:px-4 lg:px-6">
+      <div
+        className={cn(
+          "mx-auto flex h-12 items-center gap-2 sm:h-14 sm:gap-3",
+          APP_MAX_WIDTH,
+          APP_GUTTER_X
+        )}
+      >
         <Link href="/" className="group flex shrink-0 items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-ds-lime text-ds-inverse transition-transform group-hover:scale-105 sm:h-8 sm:w-8 sm:rounded-xl">
             <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.25} />

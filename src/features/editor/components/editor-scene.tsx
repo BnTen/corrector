@@ -257,7 +257,7 @@ export function EditorScene({
   }, [plainText, appliedLog, archiveId, editor, onArchiveSaved]);
 
   return (
-    <div className={cn("flex min-h-0 flex-col gap-2", className)}>
+    <div className={cn("flex min-h-0 flex-col gap-3", className)}>
       {!hideToolDock ? (
         <EditorToolDock
           editor={editor}
@@ -270,7 +270,7 @@ export function EditorScene({
         />
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-hidden rounded-[14px] border border-ds-border/70 bg-ds-elevated shadow-ds-sm">
+      <div className="min-h-0 flex-1 overflow-hidden rounded-ds-md border border-ds-border/70 bg-ds-elevated shadow-ds-sm">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ds-border/50 px-3 py-1.5 sm:px-4">
           <span className="text-xs text-ds-muted">
             <strong className="text-ds-ink">
@@ -306,9 +306,9 @@ export function EditorScene({
         </div>
       </div>
 
-      <div className="grid shrink-0 gap-2 lg:grid-cols-2">
+      <div className="grid shrink-0 gap-3 lg:grid-cols-2">
         <CleanTextPanel text={plainText} correctionCount={appliedLog.length} />
-        <div className="rounded-[14px] border border-ds-border/60 bg-ds-elevated p-2.5 shadow-ds-sm">
+        <div className="rounded-ds-md border border-ds-border/60 bg-ds-elevated p-3 shadow-ds-sm">
           <CorrectionThread
             appliedLog={appliedLog}
             isChecking={isChecking}

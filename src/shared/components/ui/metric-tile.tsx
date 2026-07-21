@@ -28,7 +28,7 @@ export function MetricTile({
   return (
     <div
       className={cn(
-        "rounded-[14px] border border-ds-border/60 bg-ds-elevated p-4 shadow-ds-sm",
+        "rounded-ds-md border border-ds-border/60 bg-ds-elevated p-4 shadow-ds-sm",
         className
       )}
       {...props}

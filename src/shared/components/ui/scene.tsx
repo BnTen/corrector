@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/shared/lib/cn";
+import { APP_GUTTER_X } from "@/shared/lib/layout";
 
 export interface SceneProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Optional max width for the center stage */
@@ -27,7 +28,8 @@ export function Scene({
   return (
     <div
       className={cn(
-        "mx-auto w-full px-4 py-6 lg:px-6",
+        "mx-auto w-full py-4 sm:py-5",
+        APP_GUTTER_X,
         maxWidthMap[maxWidth],
         className
       )}

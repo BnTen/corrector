@@ -18,7 +18,7 @@ export function BentoTile({
   return (
     <div
       className={cn(
-        "rounded-[14px] border border-ds-border/60 bg-ds-elevated p-5 shadow-ds-md",
+        "rounded-ds-md border border-ds-border/60 bg-ds-elevated p-4 shadow-ds-md",
         span === "2" && "lg:col-span-2",
         span === "full" && "col-span-full",
         className
@@ -26,7 +26,7 @@ export function BentoTile({
       {...props}
     >
       {(title || description) && (
-        <div className="mb-4">
+        <div className="mb-3">
           {title ? (
             <h3 className="text-sm font-semibold text-ds-ink">{title}</h3>
           ) : null}
