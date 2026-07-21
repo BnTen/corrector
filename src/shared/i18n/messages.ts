@@ -43,6 +43,10 @@ export const en = {
       "Live spelling, grammar & style. Two free corrections — no account, no wait.",
     micro: "Opens in seconds · email only after your 2 free tries",
     demoLabel: "Live correction",
+    inputLabel: "Text to correct",
+    inputPlaceholder: "Type or paste a sentence…",
+    inputSubmit: "Correct now",
+    inputHint: "Enter to open the playground — 2 free corrections",
   },
   try: {
     title: "Playground",
@@ -200,6 +204,10 @@ export const fr = {
       "Orthographe, grammaire et style en live. Deux corrections gratuites — sans compte, sans attendre.",
     micro: "Ouvert en secondes · email seulement après vos 2 essais",
     demoLabel: "Correction live",
+    inputLabel: "Texte à corriger",
+    inputPlaceholder: "Écrivez ou collez une phrase…",
+    inputSubmit: "Corriger maintenant",
+    inputHint: "Entrée pour ouvrir le playground — 2 corrections gratuites",
   },
   try: {
     title: "Playground",

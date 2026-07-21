@@ -6,6 +6,7 @@ import { TopBar } from "@/shared/components/ui/top-bar";
 import { EditorScene } from "@/features/editor/components/editor-scene";
 import { EmailGateModal } from "@/features/funnel/components/email-gate-modal";
 import { useFunnelCredits } from "@/features/funnel/hooks/use-funnel-credits";
+import { consumeTryDraft } from "@/features/funnel/lib/draft-storage";
 import { Pill } from "@/shared/components/ui/pill";
 import { useI18n } from "@/shared/i18n/provider";
 
@@ -21,6 +22,17 @@ export default function TryPage() {
     leadEmail,
     hydrated,
   } = useFunnelCredits();
+
+  const [loadContent, setLoadContent] = React.useState<{
+    text: string;
+    nonce: number;
+  } | null>(null);
+
+  React.useEffect(() => {
+    const draft = consumeTryDraft();
+    if (!draft) return;
+    setLoadContent({ text: draft, nonce: Date.now() });
+  }, []);
 
   const handleCreditsConsumed = React.useCallback(
     (count: number) => {
@@ -87,6 +99,7 @@ export default function TryPage() {
 
         <div className="min-h-0 flex-1 overflow-y-auto">
           <EditorScene
+            loadContent={loadContent}
             creditsRemaining={creditsRemaining}
             onCreditsConsumed={handleCreditsConsumed}
             onCreditsExhausted={handleExhaustedOnce}
