@@ -5,6 +5,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Pill } from "@/shared/components/ui/pill";
 import { cn } from "@/shared/lib/cn";
 import type { LintMatch } from "@/features/editor/types";
+import type { AppliedCorrection } from "@/features/editor/lib/apply-matches";
 import {
   CATEGORY_LABELS,
   CATEGORY_TONES,
@@ -12,6 +13,8 @@ import {
 
 export interface CorrectionThreadProps {
   matches: LintMatch[];
+  appliedLog: AppliedCorrection[];
+  autoCorrect: boolean;
   activeId?: string | null;
   ignoredIds?: Set<string>;
   onSelect?: (match: LintMatch) => void;
@@ -23,6 +26,8 @@ export interface CorrectionThreadProps {
 
 export function CorrectionThread({
   matches,
+  appliedLog,
+  autoCorrect,
   activeId,
   ignoredIds,
   onSelect,
@@ -31,28 +36,66 @@ export function CorrectionThread({
   isChecking,
   className,
 }: CorrectionThreadProps) {
-  const visible = matches.filter((m) => !ignoredIds?.has(m.id));
+  const pending = matches.filter((m) => !ignoredIds?.has(m.id));
 
   return (
     <div className={cn("flex h-full min-h-0 flex-col", className)}>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-ds-ink">Corrections</h3>
+        <h3 className="text-sm font-semibold text-ds-ink">
+          {autoCorrect ? "Corrections auto" : "Corrections"}
+        </h3>
         <span className="text-xs text-ds-muted">
           {isChecking
             ? "Analyse…"
-            : `${visible.length} suggestion${visible.length === 1 ? "" : "s"}`}
+            : autoCorrect
+              ? `${appliedLog.length} appliquée${appliedLog.length === 1 ? "" : "s"}`
+              : `${pending.length} suggestion${pending.length === 1 ? "" : "s"}`}
         </span>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto pr-1">
-        {visible.length === 0 ? (
+        {autoCorrect ? (
+          appliedLog.length === 0 ? (
+            <div className="rounded-[14px] border border-dashed border-ds-border bg-ds-canvas/60 px-4 py-8 text-center text-sm text-ds-muted">
+              {isChecking
+                ? "Correction en cours…"
+                : "Écrivez — les fautes sont corrigées automatiquement."}
+            </div>
+          ) : (
+            appliedLog.map((item) => (
+              <article
+                key={item.id}
+                className="rounded-[14px] border border-ds-border/60 bg-ds-canvas/40 px-3.5 py-3"
+              >
+                <div className="flex items-center gap-2">
+                  <Pill tone={CATEGORY_TONES[item.category]}>
+                    {CATEGORY_LABELS[item.category]}
+                  </Pill>
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-ds-muted">
+                    Auto
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-ds-ink">
+                  <span className="line-through text-ds-muted">
+                    {item.original}
+                  </span>
+                  <span className="mx-1.5 text-ds-muted">→</span>
+                  <span className="font-semibold text-ds-ink">
+                    {item.replacement}
+                  </span>
+                </p>
+                <p className="mt-1 text-xs text-ds-muted">{item.message}</p>
+              </article>
+            ))
+          )
+        ) : pending.length === 0 ? (
           <div className="rounded-[14px] border border-dashed border-ds-border bg-ds-canvas/60 px-4 py-8 text-center text-sm text-ds-muted">
             {isChecking
               ? "Vérification en cours…"
               : "Aucune erreur détectée. Continuez à écrire."}
           </div>
         ) : (
-          visible.map((match) => {
+          pending.map((match) => {
             const primary = match.replacements[0];
             const isActive = match.id === activeId;
 
@@ -79,24 +122,16 @@ export function CorrectionThread({
                   <Pill tone={CATEGORY_TONES[match.category]}>
                     {CATEGORY_LABELS[match.category]}
                   </Pill>
-                  {match.ruleId ? (
-                    <span className="truncate text-[10px] text-ds-muted">
-                      {match.ruleId}
-                    </span>
-                  ) : null}
                 </div>
-
                 <p className="mt-2 text-sm leading-snug text-ds-ink">
                   {match.message}
                 </p>
-
                 {primary ? (
                   <p className="mt-1.5 text-xs text-ds-muted">
                     Suggestion :{" "}
                     <span className="font-medium text-ds-ink">{primary}</span>
                   </p>
                 ) : null}
-
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button
                     size="sm"

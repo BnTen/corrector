@@ -8,6 +8,7 @@ import {
   Redo2,
   Languages,
   SpellCheck2,
+  Zap,
 } from "lucide-react";
 import type { Editor } from "@tiptap/react";
 import { ToolDock, type ToolDockItem } from "@/shared/components/ui/tool-dock";
@@ -19,6 +20,8 @@ export interface EditorToolDockProps {
   onLanguageChange: (language: CheckLanguage) => void;
   onCheck: () => void;
   isChecking?: boolean;
+  autoCorrect?: boolean;
+  onAutoCorrectChange?: (enabled: boolean) => void;
   className?: string;
 }
 
@@ -28,6 +31,8 @@ export function EditorToolDock({
   onLanguageChange,
   onCheck,
   isChecking,
+  autoCorrect = true,
+  onAutoCorrectChange,
   className,
 }: EditorToolDockProps) {
   const items: ToolDockItem[] = [
@@ -71,6 +76,13 @@ export function EditorToolDock({
       icon: <SpellCheck2 />,
       active: isChecking,
       onSelect: onCheck,
+    },
+    {
+      id: "auto",
+      label: autoCorrect ? "Auto ON" : "Auto OFF",
+      icon: <Zap />,
+      active: autoCorrect,
+      onSelect: () => onAutoCorrectChange?.(!autoCorrect),
     },
   ];
 

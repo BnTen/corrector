@@ -8,12 +8,15 @@ export type CheckLanguage = "fr" | "en-US";
 export interface UseLiveCheckOptions {
   text: string;
   language: CheckLanguage;
+  /** Default 320ms for snappier live correction */
   debounceMs?: number;
   enabled?: boolean;
 }
 
 export interface UseLiveCheckResult {
   matches: LintMatch[];
+  /** Text that was checked when `matches` were produced (stale-guard for auto-apply). */
+  checkedText: string;
   isChecking: boolean;
   error: string | null;
   checkNow: () => void;
@@ -22,10 +25,11 @@ export interface UseLiveCheckResult {
 export function useLiveCheck({
   text,
   language,
-  debounceMs = 700,
+  debounceMs = 320,
   enabled = true,
 }: UseLiveCheckOptions): UseLiveCheckResult {
   const [matches, setMatches] = React.useState<LintMatch[]>([]);
+  const [checkedText, setCheckedText] = React.useState("");
   const [isChecking, setIsChecking] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [tick, setTick] = React.useState(0);
@@ -43,6 +47,7 @@ export function useLiveCheck({
     if (!trimmed) {
       abortRef.current?.abort();
       setMatches([]);
+      setCheckedText("");
       setIsChecking(false);
       setError(null);
       return;
@@ -52,6 +57,7 @@ export function useLiveCheck({
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
+      const requestText = text;
 
       setIsChecking(true);
       setError(null);
@@ -60,7 +66,7 @@ export function useLiveCheck({
         const response = await fetch("/api/check", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, language }),
+          body: JSON.stringify({ text: requestText, language }),
           signal: controller.signal,
         });
 
@@ -75,6 +81,7 @@ export function useLiveCheck({
 
         if (!controller.signal.aborted) {
           setMatches(data?.matches ?? []);
+          setCheckedText(requestText);
         }
       } catch (err) {
         if (controller.signal.aborted) return;
@@ -82,6 +89,7 @@ export function useLiveCheck({
           err instanceof Error ? err.message : "Unable to check text";
         setError(message);
         setMatches([]);
+        setCheckedText("");
       } finally {
         if (!controller.signal.aborted) {
           setIsChecking(false);
@@ -95,5 +103,5 @@ export function useLiveCheck({
     };
   }, [text, language, debounceMs, enabled, tick]);
 
-  return { matches, isChecking, error, checkNow };
+  return { matches, checkedText, isChecking, error, checkNow };
 }

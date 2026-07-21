@@ -18,6 +18,10 @@ import {
   useLiveCheck,
   type CheckLanguage,
 } from "@/features/editor/hooks/use-live-check";
+import {
+  applyAllReplacements,
+  type AppliedCorrection,
+} from "@/features/editor/lib/apply-matches";
 import { CorrectionThread } from "@/features/editor/components/correction-thread";
 import { DocumentMetaCards } from "@/features/editor/components/document-meta-cards";
 import { EditorToolDock } from "@/features/editor/components/editor-tool-dock";
@@ -82,6 +86,8 @@ export interface EditorSceneProps {
 export function EditorScene({ className, hideToolDock }: EditorSceneProps) {
   const [language, setLanguage] = React.useState<CheckLanguage>("fr");
   const [plainText, setPlainText] = React.useState("");
+  const [autoCorrect, setAutoCorrect] = React.useState(true);
+  const [appliedLog, setAppliedLog] = React.useState<AppliedCorrection[]>([]);
   const [activeMatchId, setActiveMatchId] = React.useState<string | null>(null);
   const [ignoredIds, setIgnoredIds] = React.useState<Set<string>>(
     () => new Set()
@@ -94,10 +100,15 @@ export function EditorScene({ className, hideToolDock }: EditorSceneProps) {
 
   const matchesRef = React.useRef<LintMatch[]>([]);
   const editorSurfaceRef = React.useRef<HTMLDivElement>(null);
+  const applyingRef = React.useRef(false);
+  const lastAppliedFingerprintRef = React.useRef("");
+  const autoCorrectRef = React.useRef(autoCorrect);
+  autoCorrectRef.current = autoCorrect;
 
-  const { matches, isChecking, error, checkNow } = useLiveCheck({
+  const { matches, checkedText, isChecking, error, checkNow } = useLiveCheck({
     text: plainText,
     language,
+    debounceMs: 320,
   });
 
   const visibleMatches = React.useMemo(
@@ -105,7 +116,7 @@ export function EditorScene({ className, hideToolDock }: EditorSceneProps) {
     [matches, ignoredIds]
   );
 
-  matchesRef.current = visibleMatches;
+  matchesRef.current = autoCorrect ? [] : visibleMatches;
 
   const activeMatch =
     visibleMatches.find((m) => m.id === activeMatchId) ?? null;
@@ -123,12 +134,25 @@ export function EditorScene({ className, hideToolDock }: EditorSceneProps) {
       const to = offsetToPos(doc, match.offset + match.length);
       if (from === null || to === null || to < from) return;
 
+      const original = plainText.slice(match.offset, match.offset + match.length);
       ed.chain().focus().insertContentAt({ from, to }, replacement).run();
+
+      setAppliedLog((prev) => [
+        {
+          id: `${match.id}-${Date.now()}`,
+          original,
+          replacement,
+          message: match.message,
+          category: match.category,
+          appliedAt: Date.now(),
+        },
+        ...prev,
+      ].slice(0, 40));
 
       setIgnoredIds((prev) => new Set(prev).add(match.id));
       clearSelection();
     },
-    [clearSelection]
+    [clearSelection, plainText]
   );
 
   const lintExtension = React.useMemo(
@@ -148,16 +172,18 @@ export function EditorScene({ className, hideToolDock }: EditorSceneProps) {
       StarterKit,
       Placeholder.configure({
         placeholder:
-          "Écrivez votre texte… les suggestions apparaissent en direct.",
+          "Écrivez votre texte… les fautes sont corrigées automatiquement.",
       }),
       lintExtension,
     ],
     editorProps: {
       attributes: {
         class:
-          "prose prose-neutral max-w-none min-h-[280px] px-1 py-2 focus:outline-none",
+          "prose prose-neutral max-w-none min-h-[280px] px-1 py-2 text-base focus:outline-none",
       },
       handleClick(view, pos, event) {
+        if (autoCorrectRef.current) return false;
+
         const offset = posToOffset(view.state.doc, pos);
         const match = findMatchAtOffset(matchesRef.current, offset);
         if (!match) {
@@ -190,7 +216,8 @@ export function EditorScene({ className, hideToolDock }: EditorSceneProps) {
         return true;
       },
       handleKeyDown(view, event) {
-        if (event.key !== "Tab" || event.shiftKey) return false;
+        if (event.key !== "Tab" || event.shiftKey || autoCorrectRef.current)
+          return false;
 
         const { from } = view.state.selection;
         const offset = posToOffset(view.state.doc, from);
@@ -221,13 +248,47 @@ export function EditorScene({ className, hideToolDock }: EditorSceneProps) {
     },
   });
 
+  // Auto-apply first suggestion for every match as soon as LT returns for current text
+  React.useEffect(() => {
+    if (!editor || !autoCorrect || isChecking || applyingRef.current) return;
+    if (checkedText !== plainText) return;
+
+    const fixable = visibleMatches.filter((m) => m.replacements[0]);
+    if (fixable.length === 0) return;
+
+    const fingerprint = fixable
+      .map((m) => `${m.offset}:${m.length}:${m.replacements[0]}`)
+      .join("|");
+    if (fingerprint === lastAppliedFingerprintRef.current) return;
+
+    applyingRef.current = true;
+    lastAppliedFingerprintRef.current = fingerprint;
+
+    const applied = applyAllReplacements(editor, fixable, plainText);
+    if (applied.length > 0) {
+      setAppliedLog((prev) => [...applied, ...prev].slice(0, 40));
+      clearSelection();
+    }
+
+    applyingRef.current = false;
+  }, [
+    editor,
+    autoCorrect,
+    isChecking,
+    checkedText,
+    plainText,
+    visibleMatches,
+    clearSelection,
+  ]);
+
   React.useEffect(() => {
     if (!editor) return;
     refreshLintDecorations(editor.view.dispatch, editor.state);
-  }, [editor, visibleMatches]);
+  }, [editor, visibleMatches, autoCorrect]);
 
   React.useEffect(() => {
     setIgnoredIds(new Set());
+    lastAppliedFingerprintRef.current = "";
   }, [language]);
 
   const handleApply = React.useCallback(
@@ -285,10 +346,15 @@ export function EditorScene({ className, hideToolDock }: EditorSceneProps) {
           onLanguageChange={setLanguage}
           onCheck={checkNow}
           isChecking={isChecking}
+          autoCorrect={autoCorrect}
+          onAutoCorrectChange={setAutoCorrect}
         />
       ) : null}
 
-      <DocumentMetaCards matches={visibleMatches} activeMatch={activeMatch} />
+      <DocumentMetaCards
+        matches={autoCorrect ? [] : visibleMatches}
+        activeMatch={autoCorrect ? null : activeMatch}
+      />
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 xl:flex-row">
         <div className="relative min-h-0 min-w-0 flex-1">
@@ -302,13 +368,19 @@ export function EditorScene({ className, hideToolDock }: EditorSceneProps) {
                 <strong className="text-ds-ink">
                   {language === "fr" ? "Français" : "English (US)"}
                 </strong>
+                {" · "}
+                <strong className="text-ds-ink">
+                  {autoCorrect ? "Auto-correction ON" : "Manuel"}
+                </strong>
               </span>
               <span>
                 {isChecking
                   ? "Analyse…"
                   : error
                     ? "Erreur de vérification"
-                    : `${visibleMatches.length} suggestion${visibleMatches.length === 1 ? "" : "s"}`}
+                    : autoCorrect
+                      ? `${appliedLog.length} correction${appliedLog.length === 1 ? "" : "s"}`
+                      : `${visibleMatches.length} suggestion${visibleMatches.length === 1 ? "" : "s"}`}
               </span>
             </div>
 
@@ -320,7 +392,7 @@ export function EditorScene({ className, hideToolDock }: EditorSceneProps) {
               </p>
             ) : null}
 
-            {activeMatch && tooltipPos ? (
+            {!autoCorrect && activeMatch && tooltipPos ? (
               <ErrorTooltip
                 match={activeMatch}
                 className="absolute hidden lg:block"
@@ -334,7 +406,7 @@ export function EditorScene({ className, hideToolDock }: EditorSceneProps) {
             ) : null}
           </div>
 
-          {sheetOpen && activeMatch ? (
+          {!autoCorrect && sheetOpen && activeMatch ? (
             <div className="fixed inset-x-0 bottom-0 z-50 border-t border-ds-border bg-ds-elevated p-4 shadow-ds-lg safe-pb lg:hidden">
               <ErrorTooltip
                 match={activeMatch}
@@ -353,6 +425,8 @@ export function EditorScene({ className, hideToolDock }: EditorSceneProps) {
           <div className="h-full rounded-[14px] border border-ds-border/60 bg-ds-elevated p-4 shadow-ds-md">
             <CorrectionThread
               matches={visibleMatches}
+              appliedLog={appliedLog}
+              autoCorrect={autoCorrect}
               activeId={activeMatchId}
               ignoredIds={ignoredIds}
               onSelect={handleSelectMatch}
