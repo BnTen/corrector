@@ -93,6 +93,36 @@ export function SignupForm() {
             />
           </div>
 
+          <label className="flex items-start gap-2.5 text-sm leading-snug text-ds-muted">
+            <input
+              type="checkbox"
+              name="acceptTerms"
+              required
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-ds-border text-ds-ink accent-ds-lime"
+            />
+            <span>
+              {t("auth.acceptTermsPrefix")}{" "}
+              <Link
+                href="/cgu"
+                className="font-medium text-ds-ink underline-offset-2 hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t("auth.cgu")}
+              </Link>{" "}
+              {t("auth.acceptTermsAnd")}{" "}
+              <Link
+                href="/confidentialite"
+                className="font-medium text-ds-ink underline-offset-2 hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t("auth.privacy")}
+              </Link>
+              .
+            </span>
+          </label>
+
           {state?.error ? (
             <p className="text-sm text-ds-coral" role="alert">
               {state.error}

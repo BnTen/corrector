@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SignupForm } from "@/features/auth/components/signup-form";
+import { SiteFooter } from "@/shared/components/ui/site-footer";
 
 export const metadata: Metadata = {
   title: "Inscription — Text Corrector",
@@ -8,14 +9,17 @@ export const metadata: Metadata = {
 
 export default function SignupPage() {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-ds-canvas px-4 py-12">
-      <Link
-        href="/"
-        className="mb-8 text-xl font-semibold tracking-tight text-ds-ink"
-      >
-        Text Corrector
-      </Link>
-      <SignupForm />
-    </main>
+    <div className="flex min-h-dvh flex-col bg-ds-canvas">
+      <main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
+        <Link
+          href="/"
+          className="mb-8 text-xl font-semibold tracking-tight text-ds-ink"
+        >
+          Text Corrector
+        </Link>
+        <SignupForm />
+      </main>
+      <SiteFooter />
+    </div>
   );
 }

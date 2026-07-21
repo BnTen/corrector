@@ -50,9 +50,17 @@ export async function signUp(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const displayName = String(formData.get("displayName") ?? "").trim();
+  const acceptedTerms = formData.get("acceptTerms") === "on";
 
   if (!email || !password) {
     return { error: "Email et mot de passe requis." };
+  }
+
+  if (!acceptedTerms) {
+    return {
+      error:
+        "Vous devez accepter les CGU et la Politique de confidentialité.",
+    };
   }
 
   if (password.length < 6) {

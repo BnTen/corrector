@@ -8,6 +8,7 @@ import { EmailGateModal } from "@/features/funnel/components/email-gate-modal";
 import { useFunnelCredits } from "@/features/funnel/hooks/use-funnel-credits";
 import { consumeTryDraft } from "@/features/funnel/lib/draft-storage";
 import { Pill } from "@/shared/components/ui/pill";
+import { SiteFooter } from "@/shared/components/ui/site-footer";
 import { useI18n } from "@/shared/i18n/provider";
 
 export default function TryPage() {
@@ -128,6 +129,8 @@ export default function TryPage() {
           </p>
         </div>
       </div>
+
+      <SiteFooter variant="compact" />
 
       <EmailGateModal
         open={isGateOpen}

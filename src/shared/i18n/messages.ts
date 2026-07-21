@@ -68,6 +68,10 @@ export const en = {
     signingIn: "Signing in…",
     creating: "Creating…",
     googleSoon: "Google (coming soon)",
+    acceptTermsPrefix: "I agree to the",
+    acceptTermsAnd: "and the",
+    cgu: "Terms of Use",
+    privacy: "Privacy Policy",
   },
   dashboard: {
     title: "Dashboard",
@@ -265,6 +269,10 @@ export const fr = {
     signingIn: "Connexion…",
     creating: "Création…",
     googleSoon: "Google (bientôt)",
+    acceptTermsPrefix: "J’accepte les",
+    acceptTermsAnd: "et la",
+    cgu: "CGU",
+    privacy: "Politique de confidentialité",
   },
   dashboard: {
     title: "Dashboard",
