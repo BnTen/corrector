@@ -75,6 +75,15 @@ export function upsertArchive(
   return created;
 }
 
+export function createEmptyArchive(title?: string): ArchiveEntry {
+  return upsertArchive({
+    title: title?.trim() || "Nouveau texte",
+    content: "",
+    html: "<p></p>",
+    corrections: [],
+  });
+}
+
 export function deleteArchive(id: string): void {
   saveArchives(loadArchives().filter((e) => e.id !== id));
 }

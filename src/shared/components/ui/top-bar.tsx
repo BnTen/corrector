@@ -8,20 +8,25 @@ import { LocaleSwitcher } from "@/shared/i18n/locale-switcher";
 import { useI18n } from "@/shared/i18n/provider";
 
 export interface TopBarNavItem {
-  href: string;
+  href?: string;
   label: string;
   active?: boolean;
+  onClick?: () => void;
+  id?: string;
 }
 
 export interface TopBarProps extends React.HTMLAttributes<HTMLElement> {
   navItems?: TopBarNavItem[];
   showEditorCta?: boolean;
+  /** Extra row under the main bar (e.g. mobile chat-style chips). */
+  subBar?: React.ReactNode;
 }
 
 export function TopBar({
   className,
   navItems,
   showEditorCta = true,
+  subBar,
   children,
   ...props
 }: TopBarProps) {
@@ -38,7 +43,7 @@ export function TopBar({
       className={cn(
         "sticky top-0 z-50 border-b border-white/10",
         "bg-gradient-to-b from-[#0c0d10] via-[#14151a] to-[#1a1b22]",
-        "shadow-[0_0_0_rgba(0,0,0,0)] backdrop-blur-xl",
+        "backdrop-blur-xl",
         "safe-pt",
         className
       )}
@@ -49,42 +54,59 @@ export function TopBar({
         aria-hidden
       />
 
-      <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-3 px-4 lg:px-6">
-        <Link href="/" className="group flex shrink-0 items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-ds-lime text-ds-inverse transition-transform group-hover:scale-105">
-            <Sparkles className="h-4 w-4" strokeWidth={2.25} />
+      <div className="mx-auto flex h-12 max-w-[1400px] items-center gap-2 px-3 sm:h-14 sm:gap-3 sm:px-4 lg:px-6">
+        <Link href="/" className="group flex shrink-0 items-center gap-2">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-ds-lime text-ds-inverse transition-transform group-hover:scale-105 sm:h-8 sm:w-8 sm:rounded-xl">
+            <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.25} />
           </span>
-          <span className="flex flex-col leading-none">
-            <span className="text-[15px] font-semibold tracking-tight text-white">
+          <span className="hidden flex-col leading-none xs:flex sm:flex">
+            <span className="text-sm font-semibold tracking-tight text-white sm:text-[15px]">
               {t("brand.name")}
             </span>
-            <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-white/45">
+            <span className="mt-0.5 hidden text-[10px] font-medium uppercase tracking-[0.14em] text-white/45 sm:inline">
               {t("brand.tagline")}
             </span>
           </span>
         </Link>
 
         <nav
-          className="ml-2 hidden items-center gap-1 rounded-full bg-white/5 p-1 ring-1 ring-white/10 md:flex"
+          className="ml-1 flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto rounded-full bg-white/5 p-0.5 ring-1 ring-white/10 sm:ml-2 sm:gap-1 sm:p-1"
           aria-label="Main"
         >
-          {resolvedNav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-sm font-medium transition-all",
-                item.active
-                  ? "bg-white text-ds-inverse shadow-sm"
-                  : "text-white/65 hover:bg-white/10 hover:text-white"
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {resolvedNav.map((item) => {
+            const classNameItem = cn(
+              "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium transition-all sm:px-3.5 sm:py-1.5 sm:text-sm",
+              item.active
+                ? "bg-white text-ds-inverse shadow-sm"
+                : "text-white/65 hover:bg-white/10 hover:text-white"
+            );
+
+            if (item.onClick) {
+              return (
+                <button
+                  key={item.id ?? item.label}
+                  type="button"
+                  onClick={item.onClick}
+                  className={classNameItem}
+                >
+                  {item.label}
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={item.href ?? item.label}
+                href={item.href ?? "#"}
+                className={classNameItem}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
           <LocaleSwitcher />
           {children}
           {showEditorCta ? (
@@ -97,6 +119,12 @@ export function TopBar({
           ) : null}
         </div>
       </div>
+
+      {subBar ? (
+        <div className="border-t border-white/5 bg-[#12131a] lg:hidden">
+          {subBar}
+        </div>
+      ) : null}
     </header>
   );
 }

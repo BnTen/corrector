@@ -1,7 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { WorkspaceShell } from "@/shared/components/layout/workspace-shell";
+import {
+  WorkspaceShell,
+  type WorkspaceInsight,
+} from "@/shared/components/layout/workspace-shell";
 import { EditorScene } from "@/features/editor/components/editor-scene";
 import { AnalyticsPanel } from "@/features/analytics/components/analytics-panel";
 import { QuizPanel } from "@/features/quiz/components/quiz-panel";
@@ -17,6 +20,11 @@ import {
 export default function WorkspacePage() {
   const [appliedLog, setAppliedLog] = React.useState<AppliedCorrection[]>([]);
   const [archiveTick, setArchiveTick] = React.useState(0);
+  const [activeArchiveId, setActiveArchiveId] = React.useState<string | null>(
+    null
+  );
+  const [insight, setInsight] = React.useState<WorkspaceInsight>(null);
+  const [binderOpen, setBinderOpen] = React.useState(false);
   const [loadContent, setLoadContent] = React.useState<{
     html?: string;
     text: string;
@@ -43,6 +51,7 @@ export default function WorkspacePage() {
   const totalWords = Math.max(totalErrors * 4, appliedLog.length * 4, 0);
 
   const handleOpenArchive = React.useCallback((entry: ArchiveEntry) => {
+    setActiveArchiveId(entry.id);
     setLoadContent({
       html: entry.html,
       text: entry.content,
@@ -50,13 +59,32 @@ export default function WorkspacePage() {
       nonce: Date.now(),
     });
     setAppliedLog(entry.corrections ?? []);
+    setBinderOpen(false);
+    setInsight(null);
+  }, []);
+
+  const handleCreated = React.useCallback((entry: ArchiveEntry) => {
+    setArchiveTick((n) => n + 1);
+    setActiveArchiveId(entry.id);
+    setLoadContent({
+      html: entry.html ?? "<p></p>",
+      text: "",
+      archiveId: entry.id,
+      nonce: Date.now(),
+    });
+    setAppliedLog([]);
+    setBinderOpen(false);
+    setInsight(null);
   }, []);
 
   return (
     <WorkspaceShell
+      insight={insight}
+      onInsightChange={setInsight}
+      binderOpen={binderOpen}
+      onBinderOpenChange={setBinderOpen}
       analytics={
         <AnalyticsPanel
-          className="h-full"
           matchCategories={matchCategories}
           topMistakes={topMistakes}
           totalErrors={totalErrors}
@@ -71,12 +99,14 @@ export default function WorkspacePage() {
       }
       classeur={
         <ClasseurPanel
-          className="h-full"
           refreshKey={archiveTick}
+          activeId={activeArchiveId}
           onOpen={handleOpenArchive}
+          onCreated={handleCreated}
+          rail
         />
       }
-      quiz={<QuizPanel className="h-full" />}
+      quiz={<QuizPanel />}
     >
       <EditorScene
         onAppliedLogChange={setAppliedLog}

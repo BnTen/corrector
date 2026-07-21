@@ -121,9 +121,15 @@ export const en = {
   binder: {
     title: "Binder",
     desc: "Your archived corrected texts",
-    empty: "No archives yet. Keep writing — texts save automatically.",
+    empty: "No archives yet. Start a new correction below.",
     open: "Open",
     delete: "Delete",
+    new: "New correction",
+    newShort: "New",
+  },
+  workspace: {
+    insights: "Insights",
+    closePanel: "Close",
   },
   quiz: {
     title: "Quiz",
@@ -270,9 +276,15 @@ export const fr = {
   binder: {
     title: "Classeur",
     desc: "Tes textes corrigés archivés",
-    empty: "Pas encore d’archives. Continue d’écrire — sauvegarde auto.",
+    empty: "Pas encore d’archives. Crée un nouveau classeur ci-dessous.",
     open: "Ouvrir",
     delete: "Suppr.",
+    new: "Nouvelle correction",
+    newShort: "Nouveau",
+  },
+  workspace: {
+    insights: "Insights",
+    closePanel: "Fermer",
   },
   quiz: {
     title: "Quiz",
