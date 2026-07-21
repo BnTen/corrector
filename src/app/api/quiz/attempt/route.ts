@@ -7,7 +7,7 @@ import {
 } from "@/server/security/require-user";
 
 const AttemptSchema = z.object({
-  exerciseType: z.enum(["fill-blank", "conjugation", "mcq"]),
+  exerciseType: z.enum(["fill-blank", "conjugation", "mcq", "swipe", "spot"]),
   category: z.string().nullable().optional(),
   correct: z.boolean(),
   payload: z.record(z.string(), z.unknown()).optional(),

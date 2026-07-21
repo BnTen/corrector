@@ -1,4 +1,11 @@
-export type ExerciseType = "fill-blank" | "conjugation" | "mcq";
+export type GameId = "swipe" | "mcq" | "fill" | "spot";
+
+export type ExerciseType =
+  | "fill-blank"
+  | "conjugation"
+  | "mcq"
+  | "swipe"
+  | "spot";
 
 export interface ErrorLike {
   category?: string | null;
@@ -9,36 +16,64 @@ export interface ErrorLike {
   ruleId?: string | null;
 }
 
-export interface QuizExerciseBase {
+export interface SwipeCard {
   id: string;
-  type: ExerciseType;
+  type: "swipe";
   category: string;
   prompt: string;
+  sentence: string;
+  highlighted: string;
+  /** If true, the highlighted form is correct → swipe right. */
+  isCorrectForm: boolean;
   answer: string;
   explanation?: string;
 }
 
-export interface FillBlankExercise extends QuizExerciseBase {
+export interface McqCard {
+  id: string;
+  type: "mcq";
+  category: string;
+  prompt: string;
+  options: string[];
+  answer: string;
+  explanation?: string;
+}
+
+export interface FillCard {
+  id: string;
   type: "fill-blank";
+  category: string;
+  prompt: string;
   sentence: string;
   blankToken: string;
+  answer: string;
+  explanation?: string;
 }
 
-export interface ConjugationExercise extends QuizExerciseBase {
-  type: "conjugation";
-  infinitiveHint: string;
-  tenseHint: string;
+export interface SpotToken {
+  text: string;
+  isError: boolean;
 }
 
-export interface McqExercise extends QuizExerciseBase {
-  type: "mcq";
-  options: string[];
+export interface SpotCard {
+  id: string;
+  type: "spot";
+  category: string;
+  prompt: string;
+  tokens: SpotToken[];
+  answer: string;
+  correction: string;
+  explanation?: string;
 }
 
-export type QuizExercise =
-  | FillBlankExercise
-  | ConjugationExercise
-  | McqExercise;
+export type GameCard = SwipeCard | McqCard | FillCard | SpotCard;
+
+export interface GameDecks {
+  swipe: SwipeCard[];
+  mcq: McqCard[];
+  fill: FillCard[];
+  spot: SpotCard[];
+}
 
 function slugId(prefix: string, index: number): string {
   return `${prefix}-${index}-${Math.random().toString(36).slice(2, 8)}`;
@@ -55,104 +90,204 @@ function pickReplacement(error: ErrorLike): string {
   return original;
 }
 
+function contextOf(error: ErrorLike): string {
+  const snippet = (error.contextSnippet || "").trim();
+  if (snippet) return snippet;
+  const original = pickOriginal(error);
+  return `… ${original} …`;
+}
+
 function blankSentence(error: ErrorLike): string {
   const original = pickOriginal(error);
-  const snippet = (error.contextSnippet || "").trim();
-  if (snippet && snippet.includes(original)) {
-    return snippet.replace(original, "____");
-  }
-  if (snippet) return `${snippet} (____)`;
-  return `Complétez : ____`;
+  const snippet = contextOf(error);
+  if (snippet.includes(original)) return snippet.replace(original, "____");
+  return `${snippet} (____)`;
 }
 
 function distractorsFor(answer: string, pool: string[]): string[] {
   const unique = Array.from(
     new Set(pool.filter((item) => item && item !== answer))
   );
-  while (unique.length < 3) {
-    unique.push(`${answer}${unique.length + 1}`);
+  const fallbacks = [
+    answer + "s",
+    answer.replace(/e$/, "") || `${answer}e`,
+    `${answer}ent`,
+    "le",
+    "la",
+    "les",
+  ];
+  for (const item of fallbacks) {
+    if (unique.length >= 3) break;
+    if (item && item !== answer && !unique.includes(item)) unique.push(item);
   }
+  while (unique.length < 3) unique.push(`${answer}${unique.length + 1}`);
   return unique.slice(0, 3);
 }
 
-export function buildFillBlank(
-  error: ErrorLike,
-  index: number
-): FillBlankExercise {
-  const answer = pickReplacement(error);
+function shuffle<T>(items: T[]): T[] {
+  return [...items].sort(() => Math.random() - 0.5);
+}
+
+function replaceOnce(haystack: string, needle: string, next: string): string {
+  const idx = haystack.indexOf(needle);
+  if (idx === -1) return haystack;
+  return haystack.slice(0, idx) + next + haystack.slice(idx + needle.length);
+}
+
+function tokenizeWithError(
+  sentence: string,
+  errorWord: string
+): SpotToken[] {
+  const parts = sentence.split(/(\s+|[,.;:!?«»"'])/);
+  let marked = false;
+  return parts
+    .filter((p) => p.length > 0)
+    .map((part) => {
+      if (/^\s+$/.test(part) || /^[,.;:!?«»"']$/.test(part)) {
+        return { text: part, isError: false };
+      }
+      if (
+        !marked &&
+        (part === errorWord ||
+          part.toLowerCase() === errorWord.toLowerCase() ||
+          part.includes(errorWord))
+      ) {
+        marked = true;
+        return { text: part, isError: true };
+      }
+      return { text: part, isError: false };
+    });
+}
+
+export function buildSwipeCard(error: ErrorLike, index: number): SwipeCard {
+  const wrong = pickOriginal(error);
+  const right = pickReplacement(error);
+  const useCorrect = wrong === right ? true : index % 2 === 1;
+  const highlighted = useCorrect ? right : wrong;
+  const sentence = replaceOnce(contextOf(error), wrong, highlighted);
+
   return {
-    id: slugId("fill", index),
-    type: "fill-blank",
+    id: slugId("swipe", index),
+    type: "swipe",
     category: error.category || "grammar",
-    prompt: error.message || "Complétez le blanc avec la forme correcte.",
-    sentence: blankSentence(error),
-    blankToken: "____",
-    answer,
+    prompt: "Cette forme est-elle correcte ?",
+    sentence,
+    highlighted,
+    isCorrectForm: useCorrect,
+    answer: right,
     explanation: error.message || undefined,
   };
 }
 
-export function buildConjugation(
-  error: ErrorLike,
-  index: number
-): ConjugationExercise {
-  const answer = pickReplacement(error);
-  return {
-    id: slugId("conj", index),
-    type: "conjugation",
-    category: error.category || "conjugation",
-    prompt: "Conjuguez correctement le verbe dans ce contexte.",
-    infinitiveHint: pickOriginal(error),
-    tenseHint: "présent / accord",
-    answer,
-    explanation: error.message || undefined,
-  };
-}
-
-export function buildMcq(
+export function buildMcqCard(
   error: ErrorLike,
   index: number,
   pool: string[]
-): McqExercise {
+): McqCard {
   const answer = pickReplacement(error);
-  const wrong = distractorsFor(answer, pool);
-  const options = [answer, ...wrong].sort(() => Math.random() - 0.5);
-
+  const options = shuffle([answer, ...distractorsFor(answer, pool)]);
   return {
     id: slugId("mcq", index),
     type: "mcq",
     category: error.category || "grammar",
-    prompt: error.message || "Choisissez la forme correcte.",
+    prompt: error.message || "Quelle est la forme correcte ?",
     options,
     answer,
     explanation: error.message || undefined,
   };
 }
 
+export function buildFillCard(error: ErrorLike, index: number): FillCard {
+  return {
+    id: slugId("fill", index),
+    type: "fill-blank",
+    category: error.category || "grammar",
+    prompt: error.message || "Complète le blanc.",
+    sentence: blankSentence(error),
+    blankToken: "____",
+    answer: pickReplacement(error),
+    explanation: error.message || undefined,
+  };
+}
+
+export function buildSpotCard(error: ErrorLike, index: number): SpotCard {
+  const wrong = pickOriginal(error);
+  const right = pickReplacement(error);
+  const sentence = contextOf(error);
+  let tokens = tokenizeWithError(sentence, wrong);
+
+  if (!tokens.some((t) => t.isError)) {
+    tokens = [
+      { text: "… ", isError: false },
+      { text: wrong, isError: true },
+      { text: " …", isError: false },
+    ];
+  }
+
+  return {
+    id: slugId("spot", index),
+    type: "spot",
+    category: error.category || "grammar",
+    prompt: "Touche le mot incorrect.",
+    tokens,
+    answer: wrong,
+    correction: right,
+    explanation: error.message || undefined,
+  };
+}
+
+export function generateGameDecks(
+  errors: ErrorLike[],
+  perGame = 8
+): GameDecks {
+  const source =
+    errors.length > 0
+      ? errors
+      : ([
+          {
+            category: "spelling",
+            message: "Orthographe",
+            original: "langague",
+            replacement: "langage",
+            contextSnippet: "Le langague naturel est riche.",
+          },
+        ] satisfies ErrorLike[]);
+
+  const pool = source
+    .flatMap((e) => [e.original, e.replacement])
+    .filter((v): v is string => Boolean(v && v.trim()));
+
+  // Cycle through errors to fill each deck
+  const pick = (n: number) => {
+    const out: ErrorLike[] = [];
+    for (let i = 0; i < n; i++) out.push(source[i % source.length]!);
+    return out;
+  };
+
+  return {
+    swipe: pick(perGame).map((e, i) => buildSwipeCard(e, i)),
+    mcq: pick(perGame).map((e, i) => buildMcqCard(e, i, pool)),
+    fill: pick(perGame).map((e, i) => buildFillCard(e, i)),
+    spot: pick(perGame).map((e, i) => buildSpotCard(e, i)),
+  };
+}
+
+/** @deprecated kept for older call sites */
+export type QuizExercise = FillCard | McqCard | {
+  id: string;
+  type: "conjugation";
+  category: string;
+  prompt: string;
+  infinitiveHint: string;
+  tenseHint: string;
+  answer: string;
+  explanation?: string;
+};
+
 export function generateExercisesFromErrors(
   errors: ErrorLike[],
   limit = 6
 ): QuizExercise[] {
-  if (errors.length === 0) return [];
-
-  const pool = errors
-    .flatMap((e) => [e.original, e.replacement])
-    .filter((v): v is string => Boolean(v && v.trim()));
-
-  const exercises: QuizExercise[] = [];
-
-  errors.slice(0, limit).forEach((error, index) => {
-    const category = (error.category || "").toLowerCase();
-    const mod = index % 3;
-
-    if (category.includes("conjug") || mod === 1) {
-      exercises.push(buildConjugation(error, index));
-    } else if (mod === 2) {
-      exercises.push(buildMcq(error, index, pool));
-    } else {
-      exercises.push(buildFillBlank(error, index));
-    }
-  });
-
-  return exercises.slice(0, limit);
+  const decks = generateGameDecks(errors, limit);
+  return [...decks.fill, ...decks.mcq].slice(0, limit);
 }

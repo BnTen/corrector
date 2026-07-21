@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import {
-  generateExercisesFromErrors,
+  generateGameDecks,
   type ErrorLike,
-  type QuizExercise,
+  type GameDecks,
 } from "@/features/quiz/lib/quiz-generator";
 import { createClient } from "@/server/supabase/server";
 import {
@@ -13,10 +13,10 @@ import {
 const MOCK_ERRORS: ErrorLike[] = [
   {
     category: "spelling",
-    message: "Faute d'orthographe possible",
-    original: "langage",
+    message: "Faute d'orthographe",
+    original: "langague",
     replacement: "langage",
-    contextSnippet: "Le langage naturel...",
+    contextSnippet: "Le langague naturel est riche.",
     ruleId: "FR_SPELLING_MOCK",
   },
   {
@@ -32,7 +32,7 @@ const MOCK_ERRORS: ErrorLike[] = [
     message: "Accord en genre",
     original: "belle",
     replacement: "beau",
-    contextSnippet: "Un belle jour.",
+    contextSnippet: "Un belle jour s'annonce.",
     ruleId: "FR_GRAMMAR_MOCK",
   },
   {
@@ -40,23 +40,55 @@ const MOCK_ERRORS: ErrorLike[] = [
     message: "Espace avant ponctuation",
     original: "bonjour!",
     replacement: "bonjour !",
-    contextSnippet: "Dire bonjour!",
+    contextSnippet: "Il faut dire bonjour!",
     ruleId: "FR_PUNCT_MOCK",
+  },
+  {
+    category: "spelling",
+    message: "Orthographe fréquente",
+    original: "acceuil",
+    replacement: "accueil",
+    contextSnippet: "Bienvenue à l'acceuil du site.",
+    ruleId: "FR_SPELLING_MOCK_2",
+  },
+  {
+    category: "grammar",
+    message: "Leur / leurs",
+    original: "leurs",
+    replacement: "leur",
+    contextSnippet: "Il faut leurs dire la vérité.",
+    ruleId: "FR_GRAMMAR_MOCK_2",
+  },
+  {
+    category: "conjugation",
+    message: "Conjugaison présent",
+    original: "manger",
+    replacement: "mange",
+    contextSnippet: "Il manger une pomme chaque matin.",
+    ruleId: "FR_CONJUGATION_MOCK_2",
+  },
+  {
+    category: "spelling",
+    message: "Accent manquant",
+    original: "independance",
+    replacement: "indépendance",
+    contextSnippet: "L'independance est précieuse.",
+    ruleId: "FR_SPELLING_MOCK_3",
   },
 ];
 
-export async function GET() {
-  let exercises: QuizExercise[] = [];
+function decksFrom(source: ErrorLike[]): GameDecks {
+  return generateGameDecks(source, 8);
+}
 
+export async function GET() {
   if (!isSupabaseConfigured()) {
-    exercises = generateExercisesFromErrors(MOCK_ERRORS, 6);
-    return NextResponse.json({ exercises, mock: true });
+    return NextResponse.json({ decks: decksFrom(MOCK_ERRORS), mock: true });
   }
 
   const user = await requireUser();
   if (!user) {
-    exercises = generateExercisesFromErrors(MOCK_ERRORS, 6);
-    return NextResponse.json({ exercises, mock: true });
+    return NextResponse.json({ decks: decksFrom(MOCK_ERRORS), mock: true });
   }
 
   try {
@@ -71,8 +103,11 @@ export async function GET() {
       .limit(40);
 
     if (error) {
-      exercises = generateExercisesFromErrors(MOCK_ERRORS, 6);
-      return NextResponse.json({ exercises, mock: true, warning: error.message });
+      return NextResponse.json({
+        decks: decksFrom(MOCK_ERRORS),
+        mock: true,
+        warning: error.message,
+      });
     }
 
     const errorLikes: ErrorLike[] = (data ?? []).map((row) => ({
@@ -85,15 +120,16 @@ export async function GET() {
     }));
 
     const source = errorLikes.length > 0 ? errorLikes : MOCK_ERRORS;
-    exercises = generateExercisesFromErrors(source, 6);
-
     return NextResponse.json({
-      exercises,
+      decks: decksFrom(source),
       mock: errorLikes.length === 0,
     });
   } catch (err) {
-    exercises = generateExercisesFromErrors(MOCK_ERRORS, 6);
     const message = err instanceof Error ? err.message : "Internal error";
-    return NextResponse.json({ exercises, mock: true, warning: message });
+    return NextResponse.json({
+      decks: decksFrom(MOCK_ERRORS),
+      mock: true,
+      warning: message,
+    });
   }
 }
