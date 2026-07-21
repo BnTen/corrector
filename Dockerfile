@@ -22,7 +22,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 # Default LT URL for Coolify container reaching host docker bridge
-ENV LANGUAGETOOL_URL=http://172.17.0.1:8010
+ENV LANGUAGETOOL_URL=http://languagetool:8010
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
