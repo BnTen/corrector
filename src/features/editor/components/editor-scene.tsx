@@ -23,7 +23,6 @@ import {
   applyAllReplacements,
   type AppliedCorrection,
 } from "@/features/editor/lib/apply-matches";
-import { CorrectionThread } from "@/features/editor/components/correction-thread";
 import { CleanTextPanel } from "@/features/editor/components/clean-text-panel";
 import { EditorToolDock } from "@/features/editor/components/editor-tool-dock";
 import {
@@ -144,7 +143,7 @@ export function EditorScene({
     editorProps: {
       attributes: {
         class:
-          "prose prose-neutral max-w-none min-h-[180px] px-1 py-2 text-base leading-relaxed focus:outline-none sm:min-h-[200px] lg:min-h-[220px]",
+          "prose prose-neutral max-w-none min-h-[240px] px-1 py-2 text-base leading-relaxed focus:outline-none sm:min-h-[320px] lg:min-h-[min(62vh,720px)]",
       },
     },
     onUpdate: ({ editor: ed }) => {
@@ -257,7 +256,7 @@ export function EditorScene({
   }, [plainText, appliedLog, archiveId, editor, onArchiveSaved]);
 
   return (
-    <div className={cn("flex min-h-0 flex-col gap-3", className)}>
+    <div className={cn("flex min-h-0 flex-1 flex-col gap-3", className)}>
       {!hideToolDock ? (
         <EditorToolDock
           editor={editor}
@@ -270,8 +269,8 @@ export function EditorScene({
         />
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-hidden rounded-ds-md border border-ds-border/70 bg-ds-elevated shadow-ds-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ds-border/50 px-3 py-1.5 sm:px-4">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-ds-md border border-ds-border/70 bg-ds-elevated shadow-ds-sm">
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-ds-border/50 px-3 py-1.5 sm:px-4">
           <span className="text-xs text-ds-muted">
             <strong className="text-ds-ink">
               {language === "fr" ? "FR" : "EN"}
@@ -296,7 +295,7 @@ export function EditorScene({
           </span>
         </div>
 
-        <div className="px-3 py-2 sm:px-4 sm:py-3">
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3">
           <EditorContent editor={editor} />
           {error ? (
             <p className="mt-2 text-xs text-ds-coral" role="alert">
@@ -306,16 +305,11 @@ export function EditorScene({
         </div>
       </div>
 
-      <div className="grid shrink-0 gap-3 lg:grid-cols-2">
-        <CleanTextPanel text={plainText} correctionCount={appliedLog.length} />
-        <div className="rounded-ds-md border border-ds-border/60 bg-ds-elevated p-3 shadow-ds-sm">
-          <CorrectionThread
-            appliedLog={appliedLog}
-            isChecking={isChecking}
-            compact
-          />
-        </div>
-      </div>
+      <CleanTextPanel
+        className="shrink-0"
+        text={plainText}
+        correctionCount={appliedLog.length}
+      />
     </div>
   );
 }

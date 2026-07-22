@@ -1,8 +1,8 @@
-/** Shared app chrome — keep TopBar and page bodies aligned. */
-export const APP_MAX_WIDTH = "max-w-[1400px]";
+/** Shared app chrome — full-bleed on desktop (no centered max-width column). */
+export const APP_MAX_WIDTH = "max-w-none";
 
-/** Horizontal padding matches TopBar (`px-3 sm:px-4 lg:px-6`). */
-export const APP_GUTTER_X = "px-3 sm:px-4 lg:px-6";
+/** Horizontal padding: keep a light inset on mobile, almost flush on desktop. */
+export const APP_GUTTER_X = "px-3 sm:px-3 lg:px-3";
 
 export const APP_PAGE_Y = "py-4 sm:py-5";
 

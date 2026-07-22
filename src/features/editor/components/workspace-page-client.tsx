@@ -9,7 +9,6 @@ import type { AppliedCorrection } from "@/features/editor/lib/apply-matches";
 import type { ArchiveEntry } from "@/features/archives/lib/classeur-storage";
 import {
   compileErrorFrequency,
-  loadArchives,
   topMistakePairs,
 } from "@/features/archives/lib/classeur-storage";
 
@@ -31,23 +30,23 @@ export function WorkspacePageClient({
     nonce: number;
   } | null>(null);
 
-  const archives = React.useMemo(() => {
-    void archiveTick;
-    return loadArchives();
-  }, [archiveTick]);
-
+  // Stats are scoped to the active correction only (not the whole binder),
+  // so a brand-new empty text does not show empty Accuracy / 0 Mistakes tiles.
   const matchCategories = React.useMemo(
-    () => compileErrorFrequency(archives, appliedLog),
-    [archives, appliedLog]
+    () => compileErrorFrequency([], appliedLog),
+    [appliedLog]
   );
 
   const topMistakes = React.useMemo(
-    () => topMistakePairs(archives, appliedLog, 6),
-    [archives, appliedLog]
+    () => topMistakePairs([], appliedLog, 6),
+    [appliedLog]
   );
 
   const totalErrors = Object.values(matchCategories).reduce((a, b) => a + b, 0);
-  const totalWords = Math.max(totalErrors * 4, appliedLog.length * 4, 0);
+  const totalWords =
+    appliedLog.length === 0
+      ? 0
+      : Math.max(totalErrors * 4, appliedLog.length * 4);
 
   const handleOpenArchive = React.useCallback((entry: ArchiveEntry) => {
     setActiveArchiveId(entry.id);
@@ -89,14 +88,16 @@ export function WorkspacePageClient({
         />
       }
     >
-      <div className="flex min-h-0 flex-col gap-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
         <EditorScene
+          className="min-h-0 flex-1"
           onAppliedLogChange={setAppliedLog}
           onArchiveSaved={() => setArchiveTick((n) => n + 1)}
           loadContent={loadContent}
         />
 
         <AnalyticsPanel
+          className="shrink-0"
           matchCategories={matchCategories}
           topMistakes={topMistakes}
           totalErrors={totalErrors}

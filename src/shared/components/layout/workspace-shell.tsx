@@ -31,7 +31,7 @@ function MobileChatBar({
   return (
     <div
       className={cn(
-        "mx-auto flex h-10 max-w-[1400px] items-center gap-1.5 overflow-x-auto",
+        "mx-auto flex h-10 w-full items-center gap-1.5 overflow-x-auto",
         APP_GUTTER_X
       )}
     >

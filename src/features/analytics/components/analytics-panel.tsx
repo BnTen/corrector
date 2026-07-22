@@ -137,6 +137,15 @@ export function AnalyticsPanel({
     });
 
   const breakdown = categoryBreakdown(categories);
+  const hasCorrectionData =
+    errors > 0 ||
+    checks > 0 ||
+    words > 0 ||
+    topMistakes.length > 0 ||
+    breakdown.length > 0;
+
+  // Hide empty stats (e.g. brand-new correction with nothing checked yet).
+  if (!hasCorrectionData) return null;
 
   return (
     <Panel
